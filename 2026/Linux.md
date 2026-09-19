@@ -74,6 +74,11 @@ Check processes with:
 ### How Systemd Works
 **Kernel → PID 1 (systemd) → Services → Processes**
 
+## Screenshots 
+![Linux Commands](./screenshots/5linux-command.png)
+![Day 2](./screenshots/Day2.png)
+
+
 
 
 # Day-03 (🐧 Linux Command Cheat Sheet)
@@ -191,6 +196,9 @@ So, jobs is mainly for managing commands you've launched from your current termi
 
 **Goal:** Don't memorize every Linux command. Understand **what problem each command solves**.
 
+## Screenshots
+![Day 3](./screenshots/Day3.png)
+
 
 # Day-04 (Linux Practice Note)
 
@@ -221,6 +229,9 @@ So, jobs is mainly for managing commands you've launched from your current termi
 * **What:** Sends a signal to a process.
 * **Use:** Stop a process that is no longer needed or is causing a problem.
 
+## Screenshots
+![Day 04 Process Command](./screenshots/day04-process-cmd.png)
+
 ---
 
 ## 🔧 2. Service Commands
@@ -249,6 +260,11 @@ So, jobs is mainly for managing commands you've launched from your current termi
 
 * **What:** Stops and starts SSH again.
 * **Use:** Apply configuration changes or recover a service that is behaving incorrectly.
+
+## Screenshots 
+![Day 04 Service Command](./screenshots/Day04-service-cmd.png)
+
+![Day 04 Service Command 2](./screenshots/Day04-service-cmd2.png)
 
 ---
 
@@ -280,6 +296,11 @@ So, jobs is mainly for managing commands you've launched from your current termi
 * **Use:** Check recent system activity and errors.
 
 > **Note:** Some distributions use `/var/log/messages` instead of `/var/log/syslog`.
+
+## Screenshots
+![Day 04 Log Command](./screenshots/day04-log-cmd.png)
+
+![Day 04 Log Command 2](./screenshots/day04-log-cmd2.png)
 
 ---
 
@@ -329,6 +350,11 @@ ss -tuln | grep :22
 
 **Why:** To check whether SSH is listening for network connections on port 22.
 
+## Screenshots
+
+![Day 04 Mini Trouble](./screenshots/day04-mini-trouble.png)
+
+![Day 04 Mini Trouble 1](./screenshots/day04-mini-trouble1.png)
 ## 🧠 Troubleshooting Flow
 
 ```text
