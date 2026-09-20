@@ -22,9 +22,10 @@ cat /etc/os-release
 
 Observation: Record the Linux distribution and release version.
 
-Screenshot:
+### Screenshot:
 
-![OS release output](screenshots/os-release.png)
+
+![Environment Basics](environment_basics.png)
 
 # 2. Filesystem Sanity
 
@@ -42,9 +43,9 @@ cp /etc/hosts /tmp/runbook-demo/hosts-copy && ls -l /tmp/runbook-demo
 
 Observation: Confirm that the file was copied and permissions/ownership are visible.
 
-Screenshot:
+### Screenshot:
 
-![Filesystem copy](screenshots/hosts-copy.png)
+![Filesystem](filesystem.png)
 
 # 3. Snapshot: CPU & Memory
 
@@ -54,17 +55,15 @@ ps -o pid,pcpu,pmem,comm -C nginx
 
 Observation: Record whether Nginx is using normal or elevated CPU and memory.
 
-
-
 ## Memory
 
 free -h
 
 Observation: Record available memory and whether swap usage indicates memory pressure.
 
-Screenshot:
+### Screenshot:
 
-![Memory](screenshots/free-h.png)
+![CPU and Memory](cpuandmemory.png)
 
 # 4. Snapshot: Disk & IO
 
@@ -80,9 +79,9 @@ sudo du -sh /var/log
 
 Observation: Record the total log footprint and check for unexpectedly large logs.
 
-Screenshot:
+### Screenshot:
 
-![Log directory size](screenshots/var-log-size.png)
+![Disk and IO](disk&io.png)
 
 # 5. Snapshot: Network
 
@@ -97,9 +96,9 @@ curl -I http://localhost
 
 Observation: Record the HTTP status. 200 OK indicates that the local endpoint responded successfully.
 
-Screenshot:
+### Screenshot:
 
-![Curl response](screenshots/curl-localhost.png)
+![Network](network.png)
 
 # 6. Logs Reviewed
 
@@ -115,27 +114,35 @@ sudo tail -n 50 /var/log/nginx/error.log
 
 Observation: Record whether recent errors exist and identify repeated error patterns.
 
-Screenshot:
+### Screenshot:
 
-![Nginx error log](screenshots/nginx-error-log.png)
+
+![Log Received](log-received.png)
 
 
 
 # Troubleshooting flow
 
 Health snapshot
+
       ↓
 Service status
+
       ↓
 CPU / Memory
+
       ↓
 Disk / IO
+
       ↓
 Network / Endpoint
+
       ↓
 Service logs
+
       ↓
 Error log
+
       ↓
 Identify evidence → Fix → Verify
 
@@ -145,10 +152,12 @@ Identify evidence → Fix → Verify
 
 Validate configuration first with sudo nginx -t.
 
+
 Restart only when evidence indicates a service-level failure.
+
 
 Verify with systemctl is-active nginx and curl -I http://localhost.
 
-Screenshot:
+### Screenshot:
 
-![Recovery verification](screenshots/recovery-verification.png)
+![Recovery verification](restart.png)
