@@ -1,72 +1,81 @@
-# Core components of Linux  
- 
- # Linux Kernal
- The kernel is the core part of the Linux operating system. It acts as a bridge between hardware and software. It manages system resources and controls communication between hardware and applications.There are different types of kernels, but Linux uses a Monolithic Kernel.
- # User Spacce
- User space is the area where user applications and programs run. It is separate from the kernel space for security and stability.
- 
-Programs in user space cannot directly access hardware. They request services from the kernel through system calls.
-# Init / systemd
-Init is the first process started by the Linux kernel during booting. Its Process ID is PID 1. It initializes the system and starts background services.
-Modern Linux distributions mainly use systemd instead of traditional init systems.
+# Day-02 (Linux Under the Hood)
 
+## 1. Core Components
 
+* **Kernel**
 
-# Process States
+  * Core of Linux(heart of linux).
+  * Manages CPU, RAM, storage, devices, networking, and processes.
+  * Provides a bridge between applications and hardware.
+  * Where linus torvalds store the code of linux.
 
-A process is a program that is currently running in Linux.
-A process changes its state while working.
-# Running
-The process is actively using the CPU and executing instructions.
-# Ready
-The process is ready to run but waiting for CPU time.
-# Sleeping (Waiting)
-The process is waiting for some event like user input, file reading, or network response.
-# Stopped
-The process is paused or stopped temporarily.
-# Zombie
-The process has finished execution but still has an entry in the process table because the parent process has not removed it yet.
-# Dead (Terminated)
-The process is completely finished and removed from memory.
+* **User Space**
 
-# Process Management
-Linux manages processes by:
+  * Where normal applications and commands run.
+  * Examples: Bash, Python, `ls`, `vim`, browsers.
+  * Applications interact with the kernel through **system calls(Shell Commands)**.
 
-Giving each process a unique PID (Process ID)
+* **Init / systemd**
 
-Allocating CPU and memory
+  * The first major process started by the kernel, usually **PID 1**.
+  * `systemd` manages services, boot process, processes, logs, and system targets.
+  * Example: starting SSH automatically when the system boots.
 
-Scheduling process execution
+## 2. How Processes Work
 
-Stopping or ending processes when needed
+* A **process** is a running instance of a program.
+* Every process has a unique **PID (Process ID)**.
+* A process can create another process called a **child process**.
+* Linux commonly creates processes using:
 
-Useful commands:
+  * `fork()` → creates a new process.
+  * `exec()` → replaces the process with a new program.
+* The kernel schedules processes so they can share CPU time.
 
-ps        # show running processes
+## 3. What systemd Does
 
-top       # live process monitoring
+* Starts and stops services.
+* Manages services during boot.
+* Restarts failed services when configured.
+* Manages dependencies between services.
+* Collects system logs through **journald**.
+* Useful commands:
 
-kill PID  # stop a process
+  * `systemctl status ssh`
+  * `systemctl start ssh`
+  * `systemctl stop ssh`
 
-# systemd 
+## 4. Process States
 
-systemd is the modern system and service manager in Linux. It is the first process started after the kernel boots.
+* **Running (R)** → currently running or ready to run.
+* **Sleeping (S)** → waiting for an event or resource.
+* **Disk Sleep (D)** → waiting for I/O and usually cannot be interrupted immediately.
+* **Stopped (T)** → execution has been paused.
+* **Zombie (Z)** → process has finished, but its parent has not collected its exit status.
 
-What systemd Does:
+Check processes with:
+`ps aux`
 
-Starts system services during boot
-Manages background services (daemons)
-Restarts failed services automatically
-Handles logging and system startup
-Improves boot speed using parallel startup
+## 5. 5 Daily Linux Commands
 
-Why It Matters:
+1. `pwd` → shows current directory.
+2. `ls` → lists files and directories.
+3. `cd` → changes directory.
+4. `ps` → views running processes.
+5. `systemctl` → manages systemd services.
 
-Faster and more organized boot process
-Better control over services
-Automatic service recovery
-Easy service management using systemctl.
-systemd is important because it keeps the Linux system running smoothly and manages all essential services efficiently.
+### Simple Flow
+
+### How Linux Works
+**Hardware → Kernel → User Space(Shell) → Applications**
+
+### How Systemd Works
+**Kernel → PID 1 (systemd) → Services → Processes**
+
+## Screenshots 
+![Linux Commands](./screenshots/5linux-command.png)
+![Day 2](./screenshots/Day2.png)
+
 
 # Architecture of Linux
 
