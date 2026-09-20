@@ -1,125 +1,154 @@
-# Target Service / Process
+# Day 05  Linux Troubleshooting Runbook
 
-Service chosen: OpenSSH (sshd)
+## Target Service / Process
 
-Purpose: Verify service health, system resources, network state, and logs during troubleshooting.
+## Target: Nginx (nginx)
 
-# Snapshot: Environment Basics
+### Goal: Capture a quick health snapshot, review service/network/log evidence, and document next troubleshooting actions.
 
-1. System Information
+#### Screenshot convention: Save screenshots in screenshots/ using the filenames shown below.
 
-Command    = uname -a
+# 1. Environment Basics
 
+uname -a
 
-Use:
-Shows kernel version, OS architecture, and system details.
+Observation: Record the kernel version, architecture, hostname, and other environment details.
 
+lsb_release -a / or  cat /etc/os-release
 
-2. OS Release Details
+lsb_release -a
+# If unavailable:
+cat /etc/os-release
 
-Command =    cat /etc/os-release
+Observation: Record the Linux distribution and release version.
 
-Use:    Displays Linux distribution and version information.
+Screenshot:
 
+![OS release output](screenshots/os-release.png)
 
-# Filesystem Sanity Check
-1. Create Temporary Directory
-   
-Command =mkdir /tmp/runbook-demo
+# 2. Filesystem Sanity
 
-Use:   Creates a temporary folder for testing filesystem operations.
+## Create a throwaway directory
 
+mkdir -p /tmp/runbook-demo
+echo "troubleshooting-demo" > /tmp/runbook-demo/test.txt
 
-2. Copy File and Verify
+Observation: Confirm that the temporary directory and test file were created successfully.
 
-Command = cp /etc/hosts /tmp/runbook-demo/hosts-copy && ls -l /tmp/runbook-demo
+## Copy and verify /etc/hosts
 
+cp /etc/hosts /tmp/runbook-demo/hosts-copy && ls -l /tmp/runbook-demo
 
-Use:    Copies a file and verifies file permissions and storage access.
 
+Observation: Confirm that the file was copied and permissions/ownership are visible.
 
-# Snapshot: CPU & Memory
-1. Check Memory Usage
+Screenshot:
 
-Command =   free -h
+![Filesystem copy](screenshots/hosts-copy.png)
 
-Use:  Displays RAM and swap memory usage in human-readable format.
+# 3. Snapshot: CPU & Memory
 
+## CPU / process check
 
+ps -o pid,pcpu,pmem,comm -C nginx
 
-2. Inspect SSH Process Usage
+Observation: Record whether Nginx is using normal or elevated CPU and memory.
 
-Command = ps -o pid,pcpu,pmem,comm -C sshd
 
-Use:   Shows CPU and memory consumption of the SSH service.
 
+## Memory
 
- # Snapshot: Disk & IO
-1. Disk Space Check
+free -h
 
-   
-Command  = df -h
+Observation: Record available memory and whether swap usage indicates memory pressure.
 
-Use:  Checks available and used disk space on mounted filesystems.
+Screenshot:
 
+![Memory](screenshots/free-h.png)
 
+# 4. Snapshot: Disk & IO
 
-2. Check Log Directory Size
+## Disk capacity
 
-   
-Command =   du -sh /var/log
+df -h
 
-Use:   Calculates total disk usage of log files.
+Observation: Record filesystem usage. Investigate further if a filesystem is approaching capacity.
 
+## Log directory size
 
+sudo du -sh /var/log
 
-# Snapshot: Network
-1. Verify Listening Ports
+Observation: Record the total log footprint and check for unexpectedly large logs.
 
-Command = ss -tulpn | grep ssh
+Screenshot:
 
-Use:   Checks whether SSH service is listening on network ports.
+![Log directory size](screenshots/var-log-size.png)
 
-2. Test Local Connectivity
+# 5. Snapshot: Network
 
-Command =  curl -I http://localhost
+## Listening services
 
-Use:  Sends an HTTP request to verify local server/network response.
+sudo ss -tulpn
+Observation: Confirm that Nginx is listening on the expected HTTP/HTTPS port.
 
-# Logs Reviewed
-1. Review SSH Logs
+## Service endpoint
 
-Command =  journalctl -u ssh -n 20
+curl -I http://localhost
 
-Use:   Displays the latest logs from the SSH service.
+Observation: Record the HTTP status. 200 OK indicates that the local endpoint responded successfully.
 
+Screenshot:
 
-2. Check System Logs
+![Curl response](screenshots/curl-localhost.png)
 
-Command = tail -n 20 /var/log/syslog
+# 6. Logs Reviewed
 
-Use:  Shows the most recent system log entries.
+## Nginx systemd logs
 
+sudo journalctl -u nginx -n 50
 
+Observation: Check recent service events for startup failures, configuration errors, crashes, or warnings.
 
- # If This Worsens 
- 
-1. Restart Service
+## Nginx error log
 
-Command =   sudo systemctl restart ssh
+sudo tail -n 50 /var/log/nginx/error.log
 
-            sudo systemctl status ssh
+Observation: Record whether recent errors exist and identify repeated error patterns.
 
-Use:   Restarts SSH service and verifies current status.
+Screenshot:
 
-2. Monitor Live Logs
+![Nginx error log](screenshots/nginx-error-log.png)
 
-Command = sudo journalctl -u ssh -f
 
-Use:   Tracks SSH logs in real time for failures or crashes.
 
-3. Trace Service Activity
+# Troubleshooting flow
 
-Command = sudo strace -p <PID>
+Health snapshot
+      ↓
+Service status
+      ↓
+CPU / Memory
+      ↓
+Disk / IO
+      ↓
+Network / Endpoint
+      ↓
+Service logs
+      ↓
+Error log
+      ↓
+Identify evidence → Fix → Verify
 
-Use:   Monitors system calls to diagnose hangs or blocked operations.
+# 8. If This Worsens
+
+## Restart strategy
+
+Validate configuration first with sudo nginx -t.
+
+Restart only when evidence indicates a service-level failure.
+
+Verify with systemctl is-active nginx and curl -I http://localhost.
+
+Screenshot:
+
+![Recovery verification](screenshots/recovery-verification.png)
