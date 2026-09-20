@@ -23,8 +23,6 @@ cat /etc/os-release
 Observation: Record the Linux distribution and release version.
 
 ### Screenshot:
-
-
 ![Environment Basics](environment_basics.png)
 
 # 2. Filesystem Sanity
