@@ -243,5 +243,9 @@ Here, `-a` means **append**.
 
 
 # Practice Screenshots:
+![Day 6 Summary](./day6-2.png)
+
+![Day 6 Summary](./day6-1.png)
 
 # Summary of the day:
+![Day 6 Summary](./summary.png)
