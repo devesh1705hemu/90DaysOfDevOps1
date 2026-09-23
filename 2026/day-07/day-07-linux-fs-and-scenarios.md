@@ -1,629 +1,286 @@
-# Linux File System Hierarchy Notes
+# Linux File System Hierarchy & Real-World Troubleshooting
+
+## 1. Linux File System Hierarchy
+
+Linux uses a hierarchical file system that starts from the root directory `/`.
+
+### Important Directories
+
+| Directory | Purpose |
+|---|---|
+| `/` | Root directory |
+| `/bin` | Essential user commands |
+| `/sbin` | System administration commands |
+| `/etc` | Configuration files |
+| `/home` | User home directories |
+| `/root` | Root user's home directory |
+| `/var` | Variable data |
+| `/var/log` | System and application logs |
+| `/tmp` | Temporary files |
+| `/usr` | User programs and libraries |
+| `/opt` | Optional/third-party software |
+| `/dev` | Device files |
+| `/proc` | Process and kernel information |
+| `/sys` | Hardware and kernel information |
+| `/run` | Runtime system data |
+| `/mnt` | Temporary mount points |
+| `/media` | Removable media |
+| `/boot` | Bootloader and kernel files |
 
 ---
 
-## `/` Root Directory
+# 2. Important Directories for DevOps
 
-### What it contains
+```text
+/etc       → Configuration
+/var/log   → Logs
+/home      → User files
+/opt       → Applications
+/tmp       → Temporary files
+/proc      → Process information
+/dev       → Devices
+/run       → Runtime information
+/boot      → Boot files
+/usr       → Programs and libraries
 
-The root directory is the starting point of the Linux file system.
-All files and directories exist under this directory.
 
-### Command
-
-```bash id="ddr5uk"
-ls -l /
 ```
+#  Real-World Troubleshooting Scenarios
+##  Scenario 1: Service Not Starting
 
-### Example Files/Folders Seen
+### Problem
+A web application service called myapp failed to start after a server reboot.
 
-```bash id="szl43v"
-home
-etc
-var
-```
+#### Steps
 
-### I would use this when...
+Step 1: Check service status
 
-I want to navigate the complete Linux system structure.
-
----
-
-## `/home`
-
-### What it contains
-
-This directory stores personal files and folders of normal users.
-Each user gets a separate home directory.
-
-### Command
-
-```bash id="nbyqxr"
-ls -l /home
-```
-
-### Example Files/Folders Seen
-
-```bash id="48wtwy"
-devesh
-ubuntu
-```
-
-### I would use this when...
-
-I need to access user projects, downloads, and personal files.
-
----
-
-## `/root`
-
-### What it contains
-
-This is the home directory of the root user (administrator).
-It contains root user's personal and configuration files.
-
-### Command
-
-```bash id="n8kgtr"
-sudo ls -l /root
-```
-
-### Example Files/Folders Seen
-
-```bash id="h5q0ma"
-.bashrc
-.cache
-```
-
-### I would use this when...
-
-I need administrator-level access and server management tasks.
-
----
-
-## `/etc`
-
-### What it contains
-
-This directory stores system configuration files.
-Linux services and applications keep their settings here.
-
-### Command
-
-```bash id="zzxjdf"
-ls -l /etc
-```
-
-### Example Files/Folders Seen
-
-```bash id="vzfq5v"
-hostname
-ssh
-passwd
-```
-
-### I would use this when...
-
-I need to configure services, networking, or system settings.
-
----
-
-## `/var/log`
-
-### What it contains
-
-This directory stores system and application log files.
-Logs help in troubleshooting and monitoring servers.
-
-### Command
-
-```bash id="6h0mpq"
-ls -l /var/log
-```
-
-### Example Files/Folders Seen
-
-```bash id="w3jl2u"
-syslog
-auth.log
-```
-
-### I would use this when...
-
-I need to investigate errors or monitor application activity.
-
----
-
-## `/tmp`
-
-### What it contains
-
-This directory stores temporary files created by applications and users.
-Files may be deleted automatically after reboot.
-
-### Command
-
-```bash id="f6m2nq"
-ls -l /tmp
-```
-
-### Example Files/Folders Seen
-
-```bash id="9v6m4r"
-systemd-private
-tmpfile
-```
-
-### I would use this when...
-
-I need temporary storage during testing or script execution.
-
----
-
-## `/bin`
-
-### What it contains
-
-This directory contains essential Linux command binaries.
-Basic commands required for system operation are stored here.
-
-### Command
-
-```bash id="4w7dzc"
-ls -l /bin
-```
-
-### Example Files/Folders Seen
-
-```bash id="u8y0mr"
-ls
-cp
-mv
-```
-
-### I would use this when...
-
-I need to execute important Linux commands for daily operations.
-
----
-
-## `/usr/bin`
-
-### What it contains
-
-This directory stores user-level application binaries and installed software commands.
-
-### Command
-
-```bash id="3fh6qa"
-ls -l /usr/bin
-```
-
-### Example Files/Folders Seen
-
-```bash id="9m4dqy"
-python3
-git
-nano
-```
-
-### I would use this when...
-
-I need to run installed software and development tools.
-
----
-
-## `/opt`
-
-### What it contains
-
-This directory is used for optional or third-party software installations.
-
-### Command
-
-```bash id="mg6z8f"
-ls -l /opt
-```
-
-### Example Files/Folders Seen
-
-```bash id="2sjm0d"
-google
-containerd
-```
-
-### I would use this when...
-
-I install and manage external applications or enterprise software.
-
-
-
-# Scenario-Based Linux Troubleshooting Practice
-
----
-
-# Scenario 1: Service Not Starting
-
-## Problem
-
-A web application service called `myapp` failed to start after a server reboot.
-
----
-
-## Step 1
-
-```bash id="pzj1r6"
 systemctl status myapp
-```
 
-### Why
+Step 2: Check service logs
 
-Checks whether the service is running, stopped, or failed.
-
----
-
-## Step 2
-
-```bash id="t5k3qa"
 journalctl -u myapp -n 50
-```
 
-### Why
+Step 3: Check whether the service is enabled
 
-Displays the latest 50 log lines related to the service to identify errors.
-
----
-
-## Step 3
-
-```bash id="7o8mrx"
 systemctl is-enabled myapp
-```
 
-### Why
+Step 4: Check logs from the current boot
 
-Checks whether the service is configured to start automatically after reboot.
+journalctl -u myapp -b
 
----
+Step 5: Check service configuration
 
-## Step 4
+systemctl cat myapp
 
-```bash id="ux6k1m"
-systemctl list-units --type=service
-```
+Step 6: Restart the service after fixing the issue
 
-### Why
-
-Lists all available services to verify whether `myapp` exists.
-
----
-
-## Step 5
-
-```bash id="w4y2zn"
 sudo systemctl restart myapp
-```
 
-### Why
+Step 7: Verify the service
 
-Attempts to restart the service after checking logs and status.
+systemctl status myapp
 
----
+## Scenario 2: High CPU Usage
+### Problem
+The application server is slow and you need to identify the process using high CPU.
 
-## Step 6
+#### Steps
 
-```bash id="6e1vko"
-sudo journalctl -xe
-```
+Step 1: Check live CPU usage
 
-### Why
-
-Shows detailed system error logs for deeper troubleshooting.
-
----
-
-# What I Learned
-
-Always start by checking service status, then inspect logs, verify boot configuration, and finally attempt recovery actions like restart.
-
----
-
-# Scenario 2: High CPU Usage
-
-## Problem
-
-The application server is slow and may have high CPU usage.
-
----
-
-## Step 1
-
-```bash id="v7q5ls"
 top
-```
 
-### Why
+Step 2: Find processes sorted by CPU usage
 
-Shows live CPU and memory usage of running processes.
-
-### Note
-
-Press `q` to quit.
-
----
-
-## Step 2
-
-```bash id="x8p2jw"
 ps aux --sort=-%cpu | head -10
-```
 
-### Why
+Step 3: Note the PID of the process using high CPU
 
-Displays the top 10 processes consuming the highest CPU.
+PID
 
----
+Step 4: Check details of the process
 
-## Step 3
+ps -p <PID> -f
 
-```bash id="h2w9dn"
-htop
-```
+Step 5: Inspect the process
 
-### Why
+ls -l /proc/<PID>
 
-Provides an interactive and easier-to-read process monitoring interface.
+Step 6: Monitor the specific process
 
-### Note
+top -p <PID>
 
-Press `q` to quit.
+## Scenario 3: Finding Service Logs
+### Problem
+A developer asks where the logs for the docker service are located.
 
----
+#### Steps
 
-## Step 4
+Step 1: Check Docker service status
 
-```bash id="g4m7xy"
-ps -p PID -o %cpu,%mem,cmd
-```
-
-### Why
-
-Checks detailed CPU, memory, and command information for a specific process.
-
-### Example
-
-```bash id="9z4bke"
-ps -p 1234 -o %cpu,%mem,cmd
-```
-
----
-
-## Step 5
-
-```bash id="v1k6rs"
-uptime
-```
-
-### Why
-
-Shows system load average to understand overall server load.
-
----
-
-## Step 6
-
-```bash id="c8q3lf"
-free -h
-```
-
-### Why
-
-Checks memory usage because high memory usage can also slow the server.
-
----
-
-# What I Learned
-
-When troubleshooting performance issues, first identify high CPU-consuming processes, inspect their PID, check system load, and verify whether memory usage is also affecting performance.
-
-
-# Scenario 3: Finding Service Logs
-
-## Problem
-
-A developer asks: "Where are the logs for the `docker` service?"
-
-The service is managed by `systemd`.
-
----
-
-## Step 1
-
-```bash id="7m2qkp"
 systemctl status docker
-```
 
-### Why
+Step 2: View the last 50 Docker logs
 
-Checks whether the Docker service is running, failed, or stopped and shows recent log entries.
-
----
-
-## Step 2
-
-```bash id="x5v8ld"
 journalctl -u docker -n 50
-```
 
-### Why
+Step 3: View Docker logs from the current boot
 
-Displays the last 50 log lines of the Docker service for troubleshooting.
+journalctl -u docker -b
 
----
+Step 4: Follow Docker logs in real time
 
-## Step 3
-
-```bash id="4k9wzt"
 journalctl -u docker -f
-```
 
-### Why
+Step 5: View logs from the last hour
 
-Follows Docker logs in real-time and helps monitor live service activity.
-
-### Note
-
-Press `Ctrl + C` to stop following logs.
-
----
-
-## Step 4
-
-```bash id="q3d6yn"
 journalctl -u docker --since "1 hour ago"
-```
 
-### Why
+## Scenario 4: File Permissions Issue
+### Problem
+A script at /home/user/backup.sh gives a Permission denied error when executed.
 
-Shows Docker logs generated within the last one hour.
+#### Steps
 
----
+Step 1: Check current permissions
 
-## Step 5
-
-```bash id="n8p4vs"
-journalctl -u docker --since today
-```
-
-### Why
-
-Displays all Docker service logs generated today.
-
----
-
-## Step 6
-
-```bash id="b1x7rm"
-sudo journalctl -xe
-```
-
-### Why
-
-Checks detailed system-wide error logs related to services and failures.
-
----
-
-# What I Learned
-
-For `systemd` services, logs are mainly stored in `journald`.
-Start by checking service status, then use `journalctl` to inspect recent logs, monitor live activity, and investigate errors based on time.
-
-
-
-# Scenario 4: File Permissions Issue
-
-## Problem
-
-A script located at `/home/user/backup.sh` is not executing.
-
-Error received:
-
-```bash id="t5v9pk"
-Permission denied
-```
-
----
-
-## Step 1: Check Current Permissions
-
-```bash id="d3m7qx"
 ls -l /home/user/backup.sh
-```
 
-### Why
+Step 2: Check whether execute permission is missing
 
-Checks the current permissions of the script file.
+Check for x permission
 
-### Look For
+Step 3: Add execute permission
 
-```bash id="r8k2zn"
--rw-r--r--
-```
-
-Notice there is no `x` permission, meaning the file is not executable.
-
----
-
-## Step 2: Add Execute Permission
-
-```bash id="v1x6cf"
 chmod +x /home/user/backup.sh
-```
 
-### Why
+Step 4: Verify permissions
 
-Adds execute permission to the script so it can run as a program.
-
----
-
-## Step 3: Verify Permissions Again
-
-```bash id="m4q8la"
 ls -l /home/user/backup.sh
-```
 
-### Why
 
-Confirms that execute permission was successfully added.
 
-### Look For
+# 🛠️ Linux Troubleshooting Common Commands with Uses
 
-```bash id="k7n2wd"
--rwxr-xr-x
-```
+## System
 
-Notice the `x` permission is now present.
+| Command | Use |
+|---|---|
+| `uptime` | Check how long the system has been running and view system load |
+| `hostname` | Display the system's hostname |
+| `uname -a` | Display kernel and system information |
+| `whoami` | Show the currently logged-in user |
 
 ---
 
-## Step 4: Run the Script
+## CPU
 
-```bash id="p9z5ut"
+| Command | Use |
+|---|---|
+| `top` | Monitor CPU usage and running processes in real time |
+| `ps aux --sort=-%cpu \| head -10` | Find the top 10 processes consuming the most CPU |
+
+---
+
+## Memory
+
+| Command | Use |
+|---|---|
+| `free -h` | Check RAM and swap memory usage |
+| `ps aux --sort=-%mem \| head -10` | Find the top 10 processes consuming the most memory |
+
+---
+
+## Disk
+
+| Command | Use |
+|---|---|
+| `df -h` | Check available and used disk space |
+| `du -sh *` | Check the size of files and directories in the current directory |
+| `df -i` | Check inode usage and availability |
+
+---
+
+## Processes
+
+| Command | Use |
+|---|---|
+| `ps aux` | List all running processes |
+| `ps -ef` | Display detailed information about running processes |
+| `pgrep <process>` | Find the PID of a process by its name |
+| `ps -p <PID> -f` | Display detailed information about a specific process |
+
+---
+
+## Services
+
+| Command | Use |
+|---|---|
+| `systemctl status <service>` | Check the current status of a service |
+| `systemctl restart <service>` | Restart a service |
+| `systemctl is-enabled <service>` | Check whether a service is configured to start automatically at boot |
+
+---
+
+## Logs
+
+| Command | Use |
+|---|---|
+| `journalctl -u <service> -n 50` | View the last 50 log entries for a service |
+| `journalctl -u <service> -f` | Follow service logs in real time |
+| `journalctl -p err` | View error-level system logs |
+
+---
+
+## Network
+
+| Command | Use |
+|---|---|
+| `ip addr` | Display network interfaces and IP addresses |
+| `ip route` | Display the system's routing table |
+| `ping <host>` | Test network connectivity to a host |
+| `curl <URL>` | Test HTTP/HTTPS connectivity and application responses |
+| `ss -tulnp` | Display listening TCP/UDP ports and associated processes |
+| `dig <domain>` | Query DNS information for a domain |
+
+---
+
+## Files
+
+| Command | Use |
+|---|---|
+| `ls -la` | List all files, including hidden files, with detailed information |
+| `find <path> -name <file>` | Search for a file by name |
+| `stat <file>` | Display detailed file information such as permissions, owner, size, and timestamps |
+| `file <file>` | Identify the type of a file |
+
+---
+
+## Permissions
+
+| Command | Use |
+|---|---|
+| `ls -l <file>` | Check file permissions, owner, and group |
+| `chmod +x <file>` | Add execute permission to a file |
+| `chown <user>:<group> <file>` | Change the owner and group of a file |
+
+---
+
+# 🔥 Quick Troubleshooting Flow
+
+## Server Slow
+
+```bash
+top
+ps aux --sort=-%cpu | head -10
+free -h
+ps aux --sort=-%mem | head -10
+
+Step 5: Execute the script
+
 ./backup.sh
-```
 
-### Why
+Alternative: Execute using Bash
 
-Executes the script after fixing permissions.
-
----
-
-## Step 5: Check File Owner (Optional Troubleshooting)
-
-```bash id="x2f6mr"
-ls -l /home/user/
-```
-
-### Why
-
-Verifies file ownership and permissions inside the directory.
-
----
-
-## Step 6: Change Ownership if Needed
-
-```bash id="g5v3nc"
-sudo chown user:user /home/user/backup.sh
-```
-
-### Why
-
-Changes the file owner if permission issues are caused by incorrect ownership.
-
----
-
-# What I Learned
-
-Linux files need execute (`x`) permission to run as scripts or programs.
-Always check permissions first using `ls -l`, then fix them using `chmod +x` before troubleshooting further.
-
+bash /home/user/backup.sh
