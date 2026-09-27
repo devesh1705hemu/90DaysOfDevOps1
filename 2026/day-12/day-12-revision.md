@@ -1,4 +1,4 @@
-````markdown
+
 # Day 12 – Breather & Revision (Days 01–11)
 
 ## 🎯 Goal
@@ -132,7 +132,37 @@ chmod 755 file.txt
 - Faster command usage
 - Understanding logs and permissions deeply
 
----
+# 🛠️ Basic Linux Troubleshooting Flow
+
+When something is not working on a server, don't randomly run commands.
+
+Use a structured approach:
+
+             PROBLEM
+                │
+                ▼
+       Check the service
+       systemctl status
+                │
+                ▼
+          Check logs
+          journalctl
+                │
+                ▼
+       Check processes
+           ps / top
+                │
+                ▼
+       Check resources
+      df / free / top
+                │
+                ▼
+       Check networking
+       ip / ss / curl
+                │
+                ▼
+          Find the cause
+
 
 # 🚀 Key Takeaways
 
@@ -141,9 +171,7 @@ chmod 755 file.txt
 - Logs and permissions are critical for troubleshooting.
 - Small daily practice builds strong DevOps foundations.
 
----
 
 
 
 #90DaysOfDevOps #DevOpsKaJosh #TrainWithShubham
-````
