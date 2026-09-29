@@ -328,10 +328,8 @@ If the connection had failed, the next steps would be:
    journalctl -xe
    ```
 
-```
 
 ### One-Line Answer (for submission)
 
 > Port **36843** was reachable via `nc -zv localhost 36843`, confirming that the service is actively listening and accepting connections. If it were unreachable, I would check the service status, listening ports, and firewall configuration.
-```
 
