@@ -1,21 +1,40 @@
 # Day 18 – Shell Scripting: Functions & Intermediate Concepts
 
-## Overview
+## 📌 Overview
 
-Today I learned how to write cleaner and reusable Bash scripts using functions, work with local variables, use strict mode (`set -euo pipefail`), and build a real-world system information reporting script.
+Today I focused on writing cleaner, reusable, and safer Bash scripts.
+
+### Topics Covered
+
+* Bash Functions
+* Function Arguments
+* Return Values
+* `set -euo pipefail`
+* Undefined Variables
+* Command Failure Handling
+* Pipeline Failure Handling
+* Local Variables
+* System Information
+* CPU, Memory, Disk Monitoring
+* Modular Script Design
 
 ---
 
-# Task 1: Basic Functions
+# 🎯 Task 1: Basic Functions
 
 ## Objective
 
-Create reusable functions that:
+Create reusable functions and pass arguments to them.
 
-* Greet a user
-* Add two numbers
+### Requirements
 
-## Script: `functions.sh`
+Create `functions.sh` with:
+
+* A `greet` function that accepts a name
+* An `add` function that accepts two numbers
+* Call both functions from the script
+
+## Example
 
 ```bash
 #!/bin/bash
@@ -25,273 +44,365 @@ greet() {
 }
 
 add() {
-    sum=$(( $1 + $2 ))
-    echo "Sum : $sum"
+    echo "Sum: $(($1 + $2))"
 }
 
 greet "Devesh"
-greet "Ramu"
-greet "Muskan"
-
-add 10 23
-add 43 56
-add 78 12
+add 10 20
 ```
 
-## Output
+## Run
+
+```bash
+chmod +x functions.sh
+./functions.sh
+```
+
+## Expected Output
 
 ```text
 Hello, Devesh!
-Hello, Ramu!
-Hello, Muskan!
-
-Sum : 33
-Sum : 99
-Sum : 90
+Sum: 30
 ```
 
-## Screenshot
+## 📸 Screenshot
 
+> Add a screenshot of `functions.sh` execution here.
 
+`![Task 1 - Basic Functions](screenshots/day18-task1-functions.png)`
 
-### What I Learned
+## What I Learned
 
-* How to define and call functions.
-* How to pass arguments using `$1`, `$2`.
-* How functions improve code reusability.
+1. Functions make Bash scripts reusable and organized.
+2. Function arguments can be accessed using `$1`, `$2`, etc.
+3. The same function can be called multiple times with different arguments.
 
 ---
 
-# Task 2: Functions with Return Values
+# 🎯 Task 2: Functions with Return Values
 
 ## Objective
 
-Create functions to check:
+Use functions to collect and display system information.
 
-* Disk usage
-* Memory usage
-
-## Script: `disk_check.sh`
+### Example
 
 ```bash
 #!/bin/bash
 
 check_disk() {
-    echo "Disk Usage:"
     df -h /
 }
 
 check_memory() {
-    echo "Memory Usage:"
     free -h
 }
 
-echo "========== System Resource Report =========="
+echo "===== Disk Usage ====="
 check_disk
+
+echo ""
+echo "===== Memory Usage ====="
 check_memory
 ```
 
-## Output
+## Run
 
-```text
-========== System Resource Report ==========
-
-Disk Usage:
-/dev/root 19G 2.8G 16G 15% /
-
-Memory Usage:
-Mem: 1.9Gi ...
+```bash
+chmod +x disk_check.sh
+./disk_check.sh
 ```
 
-## Screenshot
+## Expected Output
 
+```text
+===== Disk Usage =====
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/root        20G  8.5G   12G  42% /
 
+===== Memory Usage =====
+               total        used        free
+Mem:           7.7Gi       1.2Gi       4.5Gi
+Swap:             0B          0B          0B
+```
 
-### What I Learned
+> Output varies depending on the system.
 
-* Functions can organize related tasks.
-* System information can be gathered using built-in Linux commands.
-* Scripts become cleaner when logic is separated into functions.
+## 📸 Screenshot
+
+`![Task 2 - Disk and Memory](screenshots/day18-task2-disk-memory.png)`
+
+## What I Learned
+
+1. Functions can execute commands and produce output.
+2. `df -h /` checks disk usage of the root filesystem.
+3. `free -h` displays memory usage in a human-readable format.
 
 ---
 
-# Task 3: Strict Mode (`set -euo pipefail`)
+# 🎯 Task 3: Strict Mode — `set -euo pipefail`
 
 ## Objective
 
-Learn safer shell scripting practices.
+Learn how Bash strict mode makes scripts safer and helps detect errors early.
 
-## Script: `strict_demo.sh`
+Use:
 
 ```bash
-#!/bin/bash
-
 set -euo pipefail
-
-echo "$username"
 ```
-
-## Testing `set -u`
-
-### Output
-
-```text
-username: unbound variable
-```
-
-### Screenshot
-
-
 
 ---
 
-## Testing `set -e`
+## Explanation of `set -euo pipefail`
 
-### Script
-
-```bash
-#!/bin/bash
-
-set -euo pipefail
-
-ls /path/that/does/not/exist
-```
-
-### Output
-
-```text
-ls: cannot access '/path/that/does/not/exist'
-```
-
-### Screenshot
-
-
-
----
-
-## Testing `set -o pipefail`
-
-### Script
-
-```bash
-#!/bin/bash
-
-set -euo pipefail
-
-cat missing_file.txt | grep "hello"
-```
-
-### Output
-
-```text
-cat: missing_file.txt: No such file or directory
-```
-
-### Screenshot
-
-
-
----
-
-## Explanation of Strict Mode
+`set -euo pipefail` combines three Bash options:
 
 ### `set -e`
 
-Stops the script immediately when a command fails.
+```bash
+set -e
+```
+
+Means:
+
+> Exit the script when a command returns a non-zero exit status.
+
+Example:
+
+```bash
+#!/bin/bash
+
+set -e
+
+echo "Before failure"
+
+ls /does-not-exist
+
+echo "This line will not execute"
+```
+
+Because `ls` fails, the script stops immediately.
+
+---
 
 ### `set -u`
 
-Treats undefined variables as errors.
+```bash
+set -u
+```
+
+Means:
+
+> Treat an unset or undefined variable as an error.
+
+Example:
+
+```bash
+#!/bin/bash
+
+set -u
+
+echo "$undefined_variable"
+
+echo "This line will not execute"
+```
+
+Expected error:
+
+```text
+undefined_variable: unbound variable
+```
+
+This helps catch spelling mistakes and accidentally missing variables.
+
+---
 
 ### `set -o pipefail`
 
-Makes the entire pipeline fail if any command inside the pipeline fails.
+```bash
+set -o pipefail
+```
 
-### Why DevOps Engineers Use Strict Mode
+Normally, a pipeline can hide an earlier command's failure.
+
+For example:
+
+```bash
+false | echo "Hello"
+```
+
+With `pipefail` enabled, Bash considers the pipeline failed if any command in the pipeline fails.
+
+Example:
+
+```bash
+#!/bin/bash
+
+set -o pipefail
+
+if false | grep "hello"; then
+    echo "Pipeline succeeded"
+else
+    echo "Pipeline failed"
+fi
+```
+
+Expected output:
+
+```text
+Pipeline failed
+```
+
+---
+
+## Combined Strict Mode
+
+Instead of writing:
+
+```bash
+set -e
+set -u
+set -o pipefail
+```
+
+we can write:
 
 ```bash
 set -euo pipefail
 ```
 
-This helps:
+### In simple terms
 
-* Prevent silent failures.
-* Catch bugs early.
-* Create production-ready scripts.
+```text
+-e  → Stop when a command fails
+-u  → Catch undefined variables
+pipefail → Detect failures inside pipelines
+```
+
+This is a common pattern for writing safer Bash scripts.
+
+## 📸 Screenshot
+
+> Add a screenshot showing the strict mode tests and terminal output.
+
+`![Task 3 - Strict Mode](screenshots/day18-task3-strict-mode.png)`
+
+## What I Learned
+
+1. `set -e` makes scripts fail fast instead of continuing after unexpected command failures.
+2. `set -u` catches undefined variables and helps prevent variable-related bugs.
+3. `set -o pipefail` makes pipeline failures visible instead of allowing them to be hidden.
 
 ---
 
-# Task 4: Local Variables
+# 🎯 Task 4: Local Variables
 
 ## Objective
 
-Understand the difference between local and global variables.
+Understand the difference between `local` variables and regular variables inside functions.
 
-## Script: `local_demo.sh`
+## Function Using `local`
 
 ```bash
-#!/bin/bash
-
 local_demo() {
-    local message="I am a Local Variable"
-    echo "Inside local_demo(): $message"
-}
+    local name="Devesh"
+    local role="DevOps Learner"
 
-global_demo() {
-    message="I am a global variable"
-    echo "Inside global_demo(): $message"
+    echo "Inside local_demo:"
+    echo "Name: $name"
+    echo "Role: $role"
 }
-
-echo "Before calling functions:"
-echo "message ="
 
 local_demo
 
-echo "After local_demo():"
-echo "message ="
-
-global_demo
-
-echo "After global_demo():"
-echo "message = $message"
+echo ""
+echo "Outside local_demo:"
+echo "Name: ${name:-Not available}"
+echo "Role: ${role:-Not available}"
 ```
 
-## Output
+### Expected Output
 
 ```text
-Before calling functions:
-message =
+Inside local_demo:
+Name: Devesh
+Role: DevOps Learner
 
-Inside local_demo(): I am a Local Variable
-
-After local_demo():
-message =
-
-Inside global_demo(): I am a global variable
-
-After global_demo():
-message = I am a global variable
+Outside local_demo:
+Name: Not available
+Role: Not available
 ```
 
-## Screenshot
+## Function Using Regular Variables
 
+```bash
+regular_demo() {
+    name="Manhor Kumar Das"
+    role="AWS Engineer"
 
+    echo "Inside regular_demo:"
+    echo "Name: $name"
+    echo "Role: $role"
+}
 
-### What I Learned
+regular_demo
 
-* `local` variables exist only inside functions.
-* Global variables remain available outside functions.
-* Using `local` prevents accidental variable modification.
+echo ""
+echo "Outside regular_demo:"
+echo "Name: $name"
+echo "Role: $role"
+```
+
+### Expected Output
+
+```text
+Inside regular_demo:
+Name: Manhor Kumar Das
+Role: AWS Engineer
+
+Outside regular_demo:
+Name: Manhor Kumar Das
+Role: AWS Engineer
+```
+
+## Comparison
+
+| Variable           | Inside Function | Outside Function |
+| ------------------ | --------------: | ---------------: |
+| `local name="..."` |               ✅ |                ❌ |
+| `name="..."`       |               ✅ |                ✅ |
+
+## 📸 Screenshot
+
+`![Task 4 - Local Variables](screenshots/day18-task4-local-variables.png)`
+
+## What I Learned
+
+1. `local` keeps a variable limited to the current function.
+2. Regular variables can remain available after a function finishes.
+3. Using `local` helps prevent accidental changes to variables outside the function.
 
 ---
 
-# Task 5: System Information Reporter
+# 🚀 Task 5: Build a Script — System Info Reporter
 
 ## Objective
 
-Build a real-world script using functions and strict mode.
+Build an intermediate Bash script using functions and strict mode.
 
-## Script: `system_info.sh`
+### Requirements
+
+1. Print hostname and OS information.
+2. Print system uptime.
+3. Print top 5 disk usage.
+4. Print memory usage.
+5. Print top 5 CPU-consuming processes.
+6. Use a `main` function.
+7. Use section headers.
+8. Use `set -euo pipefail`.
+
+## Complete Script
 
 ```bash
 #!/bin/bash
@@ -299,100 +410,114 @@ Build a real-world script using functions and strict mode.
 set -euo pipefail
 
 print_system_info() {
-    echo "===== Hostname and OS Info ====="
     echo "Hostname: $(hostname)"
-    echo "OS: $(grep PRETTY_NAME /etc/os-release | cut -d= -f2)"
+    echo "OS: $(grep '^PRETTY_NAME=' /etc/os-release | cut -d= -f2- | tr -d '"')"
 }
 
 print_uptime() {
-    echo "===== Uptime ====="
-    uptime -p
+    uptime
 }
 
 print_disk_usage() {
-    echo "===== Top 5 Largest Directories ====="
-    sudo du -h / 2>/dev/null | sort -rh | head -n 5
+    df -h --output=source,size,used,avail,pcent,target \
+        | sort -k5 -hr \
+        | head -n 6
 }
 
 print_memory_usage() {
-    echo "===== Memory Usage ====="
     free -h
 }
 
 print_cpu_processes() {
-    echo "===== Top 5 CPU Processes ====="
-    ps -eo pid,ppid,cmd,%cpu --sort=-%cpu | head -n 6
+    ps aux --sort=-%cpu | head -n 6
 }
 
 main() {
+
+    echo "========================================"
+    echo "        SYSTEM INFORMATION"
+    echo "========================================"
+
+    echo ""
+    echo "----- Hostname & OS -----"
     print_system_info
+
+    echo ""
+    echo "----- Uptime -----"
     print_uptime
+
+    echo ""
+    echo "----- Top 5 Disk Usage -----"
     print_disk_usage
+
+    echo ""
+    echo "----- Memory Usage -----"
     print_memory_usage
+
+    echo ""
+    echo "----- Top 5 CPU Processes -----"
     print_cpu_processes
 }
 
 main
 ```
 
-## Output
+## Run
+
+```bash
+chmod +x system_info.sh
+./system_info.sh
+```
+
+## Example Output
 
 ```text
-=========================================
-        System Information Report
-=========================================
+========================================
+        SYSTEM INFORMATION
+========================================
 
-Hostname: ip-172-31-35-110
+----- Hostname & OS -----
+Hostname: ip-172-31-43-201
+OS: Ubuntu 24.04 LTS
 
-Uptime:
-up 1 hour, 49 minutes
+----- Uptime -----
+17:30:21 up 2 days, 4:21, 1 user, load average: 0.08, 0.04, 0.01
 
-Top 5 Largest Directories:
-3.5G /usr
-2.1G /usr/lib
-1.1G /var
-689M /snap
-658M /swap
+----- Top 5 Disk Usage -----
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/root        20G  8.5G   12G  42% /
+
+----- Memory Usage -----
+               total        used        free
+Mem:           7.7Gi       1.2Gi       4.5Gi
+Swap:             0B          0B          0B
+
+----- Top 5 CPU Processes -----
+USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+root         1  0.1  0.5  ...
 ```
 
-## Screenshot
+> System values will vary depending on the machine.
 
+## 📸 Screenshot
 
-
-### What I Learned
-
-* How to build a complete reporting script.
-* How to organize large scripts using functions.
-* How to combine multiple Linux commands into one useful tool.
+`![Task 5 - System Info Reporter](screenshots/day18-task5-system-info.png)`
 
 ---
 
-# Key Takeaways
+# 🧠 Day 18 – What I Learned
 
-## 1. Functions Improve Reusability
+### 3 Key Points
 
-Functions allow code to be written once and used multiple times.
+1. **Functions make Bash scripts cleaner and reusable**
+   I learned how to divide a large script into smaller functions, pass arguments, and use a `main` function to control execution.
 
-## 2. Strict Mode Improves Reliability
+2. **Strict mode makes scripts safer**
+   I practiced `set -euo pipefail` to catch command failures, undefined variables, and pipeline failures early.
 
-Using:
-
-```bash
-set -euo pipefail
-```
-
-helps catch errors early and prevents unexpected behavior.
-
-## 3. Local Variables Reduce Bugs
-
-Using:
-
-```bash
-local variable_name="value"
-```
-
-keeps variables limited to their functions and avoids conflicts.
+3. **Local variables improve script reliability**
+   I learned how `local` prevents function variables from leaking into the rest of the script and helps avoid unexpected variable conflicts.
 
 ---
 
-
+🚀 **Day 18 Complete!**
