@@ -530,7 +530,14 @@ I practiced using `set -e`, `||`, `$?`, and `exit` to handle script failures.
 
 I learned how to check whether a script is running with root privileges before performing administrative operations.
 
+
+### What I Learned
+
+* 🔄 Learned to use **`for` and `while` loops** to automate repetitive tasks in Bash.
+* 🧩 Practiced **command-line arguments** using `$1`, `$#`, `$@`, and `$0` to make scripts more flexible.
+* 🛡️ Learned **basic error handling and automation**, including `set -e`, `||`, root privilege checks, and package installation scripts.
+
+
 ---
 
 
-These concepts are important for **DevOps automation, Linux administration, CI/CD pipelines, cloud environments, and infrastructure management**.
