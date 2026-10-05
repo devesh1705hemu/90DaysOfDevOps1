@@ -1,211 +1,126 @@
-# Day 19 – Shell Scripting Project: Log Rotation, Backup & Crontab
-
-## Objective
-
-Apply shell scripting concepts to automate common system administration tasks:
-
-* Log Rotation
-* Server Backup
-* Cron Scheduling
-* Scheduled Maintenance
-
----
-
+# Day 19 – Shell Scripting: Log Rotation, Backups & Scheduled Maintenance
+## Overview
+### Goal: Automate routine Linux maintenance tasks using Bash scripts and cron.
+#### Today I practiced:
+- Log rotation and compression
+- Creating timestamped backups
+- Scheduling tasks with cron
+- Combining scripts into a maintenance workflow
+- Logging output with timestamps
+- Testing and verifying scheduled maintenance
+  
 # Task 1: Log Rotation Script
+## Objective
+Create log_rotate.sh that accepts a log directory, compresses .log files older than 7 days, deletes .gz files older than 30 days, reports the number of files processed, and exits with an error if the directory does not exist.
+### Implementation Notes
+- Log directory used: <!-- Add your log directory -->
+- Compression age: 7 days
+- Compressed-log retention: 30 days
+- Handles a missing directory with an error
+#### Script
+File: log_rotate.sh
+<!-- Paste your final log_rotate.sh script here -->
+Test Commands and Output
+<!-- Paste the command(s) you used to test the script -->
+<!-- Paste the terminal output here -->
+Screenshot
+<!-- Attach your screenshot below. Save the image in this folder, for example: screenshots/day19-task1-log-rotation.png -->
+
+ 
+#### What I learned
+1. I learned how to check whether a log directory exists before processing its files.
+2. I learned how log files can be compressed and old compressed files removed to manage disk space.
+3. I learned to report the number of files processed and handle missing directories safely.
+
+Task 2: Backup Script
+Objective
+Create backup.sh that accepts a source and destination directory, creates a timestamped .tar.gz archive, verifies the archive, reports its name and size, and removes backups older than 14 days.
+Implementation Notes
+- Source directory: /home/ubuntu/backup-practice/source
+- Destination directory: /home/ubuntu/backup-practice/destination
+- Backup archive format: .tar.gz
+- Retention period: 14 days
+Script
+File: backup.sh
+<!-- Paste your final backup.sh script here -->
+Test Commands and Output
+<!-- Paste the command(s) you used to test the script -->
+<!-- Paste the terminal output here -->
+Screenshot
+<!-- Attach your screenshot below. Save the image in this folder, for example: screenshots/day19-task2-backup.png -->
+
+ 
+What I learned
+1. I learned how to pass source and destination directories as script arguments.
+2. I learned to create timestamped .tar.gz archives and verify their contents.
+3. I learned how backup retention policies can remove old archives automatically.
+Task 3: Scheduling with Cron
+Objective
+Understand cron syntax and schedule scripts to run automatically.
+Key Concepts
+Field	Meaning	Allowed values
+Minute	Minute of the hour	0–59
+Hour	Hour of the day	0–23
+Day of month	Calendar day	1–31
+Month	Month	1–12
+Day of week	Day of week	0–7 (Sunday is 0 or 7)
+
+
+Useful Commands
+crontab -e   # Edit your cron jobs
+crontab -l   # List your cron jobs
+Cron Entry Used
+<!-- Paste the cron entry you configured for this task -->
+Example weekly backup schedule (use only if configured):
+0 3 * * 0 /home/ubuntu/pract-script/scripts/backup.sh /home/ubuntu/backup-practice/source /home/ubuntu/backup-practice/destination >> /home/ubuntu/backup-cron.log 2>&1
+Screenshot
+<!-- Attach your screenshot below. Save the image in this folder, for example: screenshots/day19-task3-cron.png -->
+
+ 
+What I learned
+1. I learned the five fields used in a cron schedule: minute, hour, day of month, month, and day of week.
+2. I practiced editing and checking scheduled jobs with crontab -e and crontab -l.
+3. I learned that cron runs according to the server's time zone and needs valid script paths and permissions.
+Task 4: Combined Scheduled Maintenance Script
+Objective
+Create maintenance.sh to:
+1. Run the log rotation script.
+2. Run the backup script.
+3. Write output and errors to /var/log/maintenance.log with timestamps.
+4. Schedule it to run daily at 1:00 AM.
+Implementation Notes
+- Maintenance script: /home/ubuntu/pract-script/scripts/maintenance.sh
+- Maintenance log: /var/log/maintenance.log
+- Log rotation path configured in the script: <!-- Confirm your actual log directory -->
+- Cron schedule: daily at 1:00 AM, based on server time
+Script
+File: maintenance.sh
+<!-- Paste your final maintenance.sh script here -->
+Test Commands and Output
+./maintenance.sh
+tail -30 /var/log/maintenance.log
+<!-- Paste the actual terminal output here -->
+Cron Entry
+0 1 * * * /home/ubuntu/pract-script/scripts/maintenance.sh
+Screenshot
+<!-- Attach your screenshot below. Save the image in this folder, for example: screenshots/day19-task4-maintenance.png -->
+
+ 
+What I learned
+1. I learned how to combine separate log-rotation and backup scripts into one maintenance workflow.
+2. I learned to redirect standard output and errors to a log file and add timestamps for troubleshooting.
+3. I learned to test the maintenance script manually and verify its logs before relying on the daily cron schedule.
+Troubleshooting Notes
+Record any issues you encountered and how you fixed them.
+Issue	Cause	Fix
+date: unbound variable	<!-- Add the cause you found -->	<!-- Add the fix you applied -->
+Cron entry not visible in crontab -l	<!-- Add what happened -->	<!-- Add the fix -->
+
+
+Key Takeaways
+1. Bash scripts can automate repeatable maintenance work.
+2. Timestamped backups and retention policies support recovery and disk-space management.
+3. Cron schedules recurring jobs using five time fields.
+4. Centralized timestamped logs help troubleshoot automation.
+5. Always test scripts manually before relying on cron.
 
-## Script: `log_rotate.sh`
-
-```bash
-#!/bin/bash
-
-if [ $# -ne 1 ]; then
-    echo "Usage: $0 <log_directory>"
-    exit 1
-fi
-
-log_dir="$1"
-
-if [ ! -d "$log_dir" ]; then
-    echo "Error: Directory does not exist."
-    exit 1
-fi
-
-compressed_count=$(find "$log_dir" -type f -name "*.log" -mtime +7 | wc -l)
-
-find "$log_dir" -type f -name "*.log" -mtime +7 -exec gzip {} \;
-
-deleted_count=$(find "$log_dir" -type f -name "*.gz" -mtime +30 | wc -l)
-
-find "$log_dir" -type f -name "*.gz" -mtime +30 -delete
-
-echo "Compressed files: $compressed_count"
-echo "Deleted files: $deleted_count"
-```
-
-### Sample Output
-
-```text
-Compressed files: 3
-Deleted files: 1
-```
-
----
-
-# Task 2: Server Backup Script
-
-## Script: `backup.sh`
-
-```bash
-#!/bin/bash
-
-if [ $# -ne 2 ]; then
-    echo "Usage: $0 <source_directory> <backup_directory>"
-    exit 1
-fi
-
-source_dir="$1"
-backup_dir="$2"
-
-if [ ! -d "$source_dir" ]; then
-    echo "Error: Source directory does not exist."
-    exit 1
-fi
-
-mkdir -p "$backup_dir"
-
-timestamp=$(date +%Y-%m-%d)
-
-archive_name="backup-${timestamp}.tar.gz"
-archive_path="${backup_dir}/${archive_name}"
-
-tar -czf "$archive_path" "$source_dir"
-
-if [ $? -ne 0 ] || [ ! -f "$archive_path" ]; then
-    echo "Error: Failed to create backup archive."
-    exit 1
-fi
-
-archive_size=$(du -h "$archive_path" | cut -f1)
-
-deleted_count=$(find "$backup_dir" -type f -name "backup-*.tar.gz" -mtime +14 | wc -l)
-
-find "$backup_dir" -type f -name "backup-*.tar.gz" -mtime +14 -delete
-
-echo "Backup created successfully!"
-echo "Archive Name: $archive_name"
-echo "Archive Size: $archive_size"
-echo "Old Backups Deleted: $deleted_count"
-```
-
-### Sample Output
-
-```text
-Backup created successfully!
-Archive Name: backup-2026-06-07.tar.gz
-Archive Size: 4.0K
-Old Backups Deleted: 0
-```
-
----
-
-# Task 3: Crontab
-
-## Check Existing Scheduled Jobs
-
-```bash
-crontab -l
-```
-
-## Cron Entries
-
-### Run log_rotate.sh every day at 2:00 AM
-
-```cron
-0 2 * * * /home/ubuntu/day19-scripting/task1/log_rotate.sh /var/log/myapp
-```
-
-### Run backup.sh every Sunday at 3:00 AM
-
-```cron
-0 3 * * 0 /home/ubuntu/day19-scripting/task2/backup.sh /home/ubuntu/hiest-project /home/ubuntu/backups
-```
-
-### Run health_check.sh every 5 minutes
-
-```cron
-*/5 * * * * /home/ubuntu/scripts/health_check.sh
-```
-
----
-
-# Task 4: Scheduled Maintenance Script
-
-## Script: `maintenance.sh`
-
-```bash
-#!/bin/bash
-
-log_file="$HOME/maintenance.log"
-
-echo "====================================" >> "$log_file"
-echo "Maintenance Started: $(date)" >> "$log_file"
-
-echo "Running Log Rotation..." >> "$log_file"
-/home/ubuntu/day19-scripting/task1/log_rotate.sh /var/log/myapp >> "$log_file" 2>&1
-
-echo "Running Backup..." >> "$log_file"
-/home/ubuntu/day19-scripting/task2/backup.sh /home/ubuntu/hiest-project /home/ubuntu/backups >> "$log_file" 2>&1
-
-echo "Maintenance Completed: $(date)" >> "$log_file"
-echo "====================================" >> "$log_file"
-echo "" >> "$log_file"
-```
-
-### Sample Output (maintenance.log)
-
-```text
-====================================
-Maintenance Started: Sat Jun 07 01:00:00 UTC 2026
-Running Log Rotation...
-Compressed files: 2
-Deleted files: 0
-Running Backup...
-Backup created successfully!
-Archive Name: backup-2026-06-07.tar.gz
-Archive Size: 4.0K
-Maintenance Completed: Sat Jun 07 01:00:03 UTC 2026
-====================================
-```
-
-## Cron Entry
-
-Run maintenance script daily at 1:00 AM:
-
-```cron
-0 1 * * * /home/ubuntu/day19-scripting/task4/maintenance.sh
-```
-
----
-
-# What I Learned
-
-### 1. File Automation Using Shell Scripts
-
-Learned how to automate log rotation and server backups using Bash scripting.
-
-### 2. Scheduling Jobs with Cron
-
-Learned cron syntax and how to schedule recurring jobs at specific times.
-
-### 3. System Maintenance Automation
-
-Learned how to combine multiple scripts into a single maintenance workflow and store logs for monitoring and troubleshooting.
-
----
-
-# Conclusion
-
-This project demonstrated practical Linux administration tasks including log management, backup automation, cron scheduling, and maintenance scripting. These skills are commonly used by DevOps Engineers, System Administrators, and Site Reliability Engineers to automate routine server operations.
-
-```
-```
