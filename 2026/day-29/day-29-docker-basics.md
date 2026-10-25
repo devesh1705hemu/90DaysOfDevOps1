@@ -1,559 +1,383 @@
-# Day 29 Docker_Basics
-## Task 1: What is Docker?
+# Day 29: Introduction to Docker
 
-### Q1. What is a Container and Why Do We Need Them?
+## Goal
 
-**Answer:**
+Understand Docker fundamentals, install Docker, run containers from Docker Hub, and practise essential container-management commands.
 
-A container is a lightweight, isolated environment that packages an application along with its dependencies, libraries, and configuration.
+## 1. What Is Docker?
 
-### Why do we need containers?
+- **Docker:** A platform for building, shipping, and running applications in containers.
+- **Container:** An isolated process with its application and dependencies that shares the host operating system's kernel.
+- **Why containers?** They help applications run consistently across development, testing, and production environments.
+- **Docker image:** A read-only template used to create containers.
+- **Docker container:** A running or stopped instance created from an image.
+- **Docker Hub:** A public registry where developers can find and download container images.
 
-* Provides a consistent environment.
-* Makes applications portable.
-* Isolates applications from each other.
-* Uses fewer resources than virtual machines.
-* Starts quickly.
-* Makes deployment and scaling easier.
+### Containers vs. Virtual Machines
 
-**Example:**
+| Containers | Virtual Machines |
+|---|---|
+| Share the host OS kernel. | Run a separate guest OS kernel. |
+| Generally lightweight and quick to start. | Generally require more resources. |
+| Isolate application processes. | Virtualize hardware and isolate a complete guest OS. |
+| Commonly used for microservices and application deployment. | Commonly used when a separate OS environment is required. |
 
-```text
-Application + Dependencies → Container
+### Docker Architecture
+
+Docker uses a client-server architecture.
+
+- **Docker client:** The command-line interface that sends commands to the Docker daemon.
+- **Docker daemon (`dockerd`):** The background service that manages containers, images, networks, and volumes.
+- **Docker image:** The template used to create a container.
+- **Docker container:** The isolated environment in which an application process runs.
+- **Docker registry:** A service that stores and distributes images, such as Docker Hub.
+
+**Architecture flow:**
+
+Docker CLI → Docker daemon → Docker image from a registry, if needed → Container creation and execution → Output returned to the user.
+
+## 2. Install and Verify Docker
+
+Install Docker Desktop for Windows from the [official Docker website](https://www.docker.com/products/docker-desktop/). Start Docker Desktop and wait for the engine to become ready.
+
+| Command | One-line explanation |
+|---|---|
+| `docker --version` | Displays the installed Docker CLI version. |
+| `docker version` | Displays Docker client and server version information. |
+| `docker info` | Displays information about the Docker engine and its configuration. |
+| `docker run hello-world` | Downloads the image if needed, runs a test container, and prints a success message. |
+
+**Important:** If Docker cannot connect to the daemon, ensure Docker Desktop is running before trying again.
+
+### What Happens When You Run `hello-world`?
+
+1. Docker checks whether the `hello-world` image is available locally.
+2. If the image is missing, Docker downloads it from Docker Hub.
+3. Docker creates and starts a container from the image.
+4. The program prints a success message.
+5. The program exits, so the container stops.
+
+## 3. Run Real Containers
+
+### Task 3.1: Run an Nginx Container
+
+```powershell
+docker run -d --name my-nginx -p 8080:80 nginx
 ```
 
----
+**Explanation:** Starts Nginx in the background, names the container `my-nginx`, and maps host port `8080` to container port `80`.
 
-## Q2. Containers vs Virtual Machines: What's the Real Difference?
+Open this address in your browser:
 
-**Answer:**
+http://localhost:8080
 
-The main difference is that **containers share the host OS kernel**, while **virtual machines have their own guest operating system**.
+You should see the Nginx welcome page.
 
-| Containers                  | Virtual Machines        |
-| --------------------------- | ----------------------- |
-| Share host OS kernel        | Have their own guest OS |
-| Lightweight                 | Heavy                   |
-| Start quickly               | Start slower            |
-| Use fewer resources         | Use more resources      |
-| Application-level isolation | Full OS virtualization  |
+### Task 3.2: Run an Ubuntu Container
 
-**Simple example:**
-
-```text
-Virtual Machine:
-Hardware → Hypervisor → Guest OS → Application
-
-Container:
-Hardware → Host OS → Container → Application
+```powershell
+docker run -it --name my-ubuntu ubuntu bash
 ```
 
----
+**Explanation:** Starts an Ubuntu container and opens an interactive Bash shell.
 
-## Q3. What is Docker Architecture?
+Run these commands inside the Ubuntu container:
 
-**Answer:**
+| Command | One-line explanation |
+|---|---|
+| `cat /etc/os-release` | Displays the Linux distribution and version information. |
+| `whoami` | Prints the current username. |
+| `pwd` | Displays the current working directory. |
+| `ls -la` | Lists files, including hidden files, with details. |
+| `apt update` | Refreshes the package index from configured repositories. |
+| `apt install -y curl iputils-ping` | Installs curl and ping utilities without prompting for confirmation. |
+| `ping -c 4 127.0.0.1` | Sends four test packets to the local loopback address. |
+| `curl --version` | Displays the installed curl version. |
+| `exit` | Exits the shell and stops the container if that shell is its main process. |
 
-Docker follows a **client-server architecture**. The main components are:
+Note: The package installation commands require network access. Changes made inside a container are not automatically saved into the original image.
 
-### 1. Docker Client
+### Task 3.3: List Running Containers
 
-The Docker Client is used to interact with Docker through commands.
-
-```bash
-docker run
-docker build
+```powershell
 docker ps
-docker pull
 ```
 
-### 2. Docker Daemon
+**Explanation:** Lists containers that are currently running.
 
-The Docker Daemon (`dockerd`) runs in the background and manages Docker objects such as containers, images, networks, and volumes.
+### Task 3.4: List All Containers
 
-### 3. Docker Image
-
-A Docker image is a read-only template used to create containers.
-
-```text
-Docker Image → Docker Container
-```
-
-### 4. Docker Container
-
-A container is a running instance of a Docker image.
-
-### 5. Docker Registry
-
-A registry stores and distributes Docker images.
-
-**Example:** Docker Hub
-
----
-
-## Q4. Describe the Docker Architecture in Your Own Words
-
-**Answer:**
-
-Docker works like a client-server system. We give commands through the **Docker Client**, which communicates with the **Docker Daemon**. The daemon manages Docker images and containers.
-
-```text
-                 Docker Registry
-                    Docker Hub
-                       ↕
-                    Pull/Push
-                       ↕
-              ┌─────────────────┐
-              │  Docker Client  │
-              └────────┬────────┘
-                       ↓
-              ┌─────────────────┐
-              │ Docker Daemon   │
-              │    dockerd      │
-              └────────┬────────┘
-                       ↓
-              ┌─────────────────┐
-              │  Docker Image   │
-              └────────┬────────┘
-                       ↓
-              ┌─────────────────┐
-              │ Docker Container │
-              └────────┬────────┘
-                       ↓
-                 Running App
-```
-
-### Simple Flow
-
-```text
-Dockerfile
-    ↓
-Docker Image
-    ↓
-Docker Container
-    ↓
-Running Application
-```
-
-## Task 2: Install Docker
-
-### Q1. How do you install Docker?
-
-**Answer:**
-
-Docker can be installed on a local machine or a cloud instance such as an AWS EC2 Ubuntu server.
-
-After installation, Docker can be verified using:
-
-```bash
-docker --version
-```
-
-To check whether the Docker service is running:
-
-```bash
-sudo systemctl status docker
-```
-
----
-
-### Q2. How do you verify the Docker installation?
-
-**Answer:**
-
-Run:
-
-```bash
-docker --version
-```
-
-Example:
-
-```text
-Docker version 29.x.x
-```
-
-We can also check Docker information using:
-
-```bash
-docker info
-```
-
----
-
-### Q3. How do you run the `hello-world` container?
-
-**Answer:**
-
-Run:
-
-```bash
-docker run hello-world
-```
-
-Docker checks whether the `hello-world` image is available locally. If it is not available, Docker pulls it from Docker Hub, creates a container from the image, runs it, and displays the output.
-
-To check the container afterward:
-
-```bash
+```powershell
 docker ps -a
 ```
 
-The container will normally show as **Exited** because `hello-world` runs once and then stops.
+**Explanation:** Lists all containers, including stopped and exited containers.
 
----
+### Task 3.5: List Local Images
 
-### Q4. What happens when you run `docker run hello-world`?
-
-**Answer:**
-
-The basic flow is:
-
-```text
-docker run hello-world
-        ↓
-Check image locally
-        ↓
-Pull image if not available
-        ↓
-Create container
-        ↓
-Start container
-        ↓
-Display Hello from Docker!
-        ↓
-Container exits
+```powershell
+docker image ls
 ```
 
-This demonstrates the basic Docker workflow of **image → container → application**.
+**Explanation:** Lists the container images stored on your local machine.
 
----
+### Task 3.6: Stop and Remove a Container
 
-# Task 3: Run Real Containers
-
-## Q1. How do you run an Nginx container and access it in a browser?
-
-**Answer:**
-
-Run:
-
-```bash
-docker run -d -p 80:80 --name nginx-server nginx
-```
-
-Here:
-
-```text
--d              → Run in detached mode
--p 80:80        → Host port 80 → Container port 80
---name          → Give the container a custom name
-nginx           → Docker image
-```
-
-Check the container:
-
-```bash
-docker ps
-```
-
-Then access Nginx using:
-
-```text
-http://EC2-PUBLIC-IP
-```
-
-If using AWS EC2, make sure port **80** is allowed in the Security Group.
-
----
-
-## Q2. How do you run an Ubuntu container in interactive mode?
-
-**Answer:**
-
-Run:
-
-```bash
-docker run -it --name ubuntu-practice ubuntu /bin/bash
-```
-
-Now we can interact with the Ubuntu container like a small Linux machine.
-
-Try:
-
-```bash
-whoami
-pwd
-ls /
-cat /etc/os-release
-```
-
-Create and explore files:
-
-```bash
-mkdir devops
-cd devops
-touch test.txt
-echo "Hello Docker" > test.txt
-cat test.txt
-```
-
-Exit the container using:
-
-```bash
-exit
-```
-
----
-
-## Q3. How do you list all running containers?
-
-**Answer:**
-
-Use:
-
-```bash
-docker ps
-```
-
-This shows only currently running containers.
-
----
-
-## Q4. How do you list all containers, including stopped ones?
-
-**Answer:**
-
-Use:
-
-```bash
-docker ps -a
-```
-
-This displays both running and stopped containers.
-
----
-
-## Q5. How do you stop and remove a container?
-
-**Answer:**
-
-First, find the container:
-
-```bash
-docker ps
-```
-
-Stop it:
-
-```bash
-docker stop nginx-server
-```
-
-Remove it:
-
-```bash
-docker rm nginx-server
-```
-
-We can also force remove a running container:
-
-```bash
-docker rm -f nginx-server
-```
-
----
-
-# Task 4: Explore
-
-## Q1. What is detached mode?
-
-**Answer:**
-
-Detached mode runs a container in the background.
-
-Use:
-
-```bash
-docker run -d nginx
-```
-
-The terminal remains available instead of attaching to the container's output.
-
-Check the running container:
-
-```bash
-docker ps
-```
-
-Without `-d`, the terminal can remain attached to the container process.
-
----
-
-## Q2. How do you give a container a custom name?
-
-**Answer:**
-
-Use the `--name` option:
-
-```bash
-docker run -d --name my-nginx nginx
-```
-
-Now we can manage the container using:
-
-```bash
+```powershell
 docker stop my-nginx
-docker start my-nginx
-docker logs my-nginx
+```
+
+**Explanation:** Gracefully stops the running container named `my-nginx`.
+
+```powershell
 docker rm my-nginx
 ```
 
----
+**Explanation:** Removes the stopped container named `my-nginx`.
 
-## Q3. How do you map a port from the container to the host?
-
-**Answer:**
-
-Use the `-p` option:
-
-```bash
-docker run -d -p 8080:80 --name my-nginx nginx
+```powershell
+docker start my-nginx
 ```
 
-The format is:
+**Explanation:** Starts an existing stopped container named `my-nginx`.
 
-```text
--p HOST_PORT:CONTAINER_PORT
+```powershell
+docker restart my-nginx
 ```
 
-So:
+**Explanation:** Restarts the container named `my-nginx`.
 
-```text
-Host:      8080
-              ↓
-Container:   80
+**Important:** Once a container is removed, you cannot restart that same container. You can create a new container from the image using `docker run`.
+
+## 4. Explore Docker Features
+
+### Task 4.1: Detached Mode
+
+```powershell
+docker run -d nginx
 ```
 
-We can access Nginx using:
+**Explanation:** Starts an Nginx container in the background and immediately returns control to the terminal.
 
-```text
-http://EC2-PUBLIC-IP:8080
+- `-d` means detached mode.
+- The container continues running independently of the terminal prompt.
+- Use `docker ps` to check whether it is running.
+
+### Task 4.2: Give a Container a Custom Name
+
+```powershell
+docker run -d --name devops-nginx nginx
 ```
 
----
+**Explanation:** Creates and starts an Nginx container with the custom name `devops-nginx`.
 
-## Q4. How do you check the logs of a running container?
+Container names must be unique among existing containers, including stopped ones.
 
-**Answer:**
+### Task 4.3: Map a Port
 
-Use:
-
-```bash
-docker logs my-nginx
+```powershell
+docker run -d --name web-server -p 8080:80 nginx
 ```
 
-To continuously follow the logs:
+**Explanation:** Maps host port `8080` to container port `80`, making the Nginx web server accessible from your computer.
 
-```bash
-docker logs -f my-nginx
+Port mapping syntax:
+
+`-p HOST_PORT:CONTAINER_PORT`
+
+For example, `-p 8080:80` means traffic sent to port `8080` on your computer is forwarded to port `80` inside the container.
+
+Open:
+
+http://localhost:8080
+
+If port `8080` is already in use, use another host port, such as `8081:80`.
+
+### Task 4.4: Check Container Logs
+
+```powershell
+docker logs web-server
 ```
 
-`-f` means **follow**, so new log output will appear in real time.
+**Explanation:** Displays the output logs captured from the `web-server` container.
 
----
-
-## Q5. How do you run a command inside a running container?
-
-**Answer:**
-
-Use `docker exec`.
-
-For example, to open a Bash shell:
-
-```bash
-docker exec -it my-nginx /bin/bash
+```powershell
+docker logs -f web-server
 ```
 
-If Bash is not available, use:
+**Explanation:** Continuously follows new log output until you press `Ctrl+C`.
 
-```bash
-docker exec -it my-nginx /bin/sh
+```powershell
+docker logs --tail 20 web-server
 ```
 
-You can then run commands inside the container:
+**Explanation:** Displays only the last 20 lines of container logs.
 
-```bash
+```powershell
+docker logs -t web-server
+```
+
+**Explanation:** Displays container log entries with timestamps.
+
+To generate Nginx access logs, open `http://localhost:8080` several times and then inspect the logs.
+
+### Task 4.5: Execute a Command Inside a Running Container
+
+```powershell
+docker exec web-server nginx -v
+```
+
+**Explanation:** Executes the Nginx version command inside the running `web-server` container.
+
+```powershell
+docker exec web-server ps
+```
+
+**Explanation:** Runs `ps` inside the container to inspect processes if the utility is available.
+
+```powershell
+docker exec -it web-server sh
+```
+
+**Explanation:** Opens an interactive shell inside the running container.
+
+Inside the container, try:
+
+```sh
 pwd
-ls
-whoami
-```
-
-Exit using:
-
-```bash
+ls -la
+cat /etc/os-release
 exit
 ```
 
----
+**Explanation:** These commands inspect the current directory, files, and OS information; `exit` closes the additional shell but normally leaves Nginx running.
 
-# Docker Commands Practiced
+Note: Minimal container images might not include utilities such as `ps` or `bash`. Use `sh` if available. The `docker exec` command works only when the target container is running.
+
+### Task 4.6: Inspect Port Mapping
+
+```powershell
+docker port web-server
+```
+
+**Explanation:** Displays the published host-to-container port mappings for `web-server`.
+
+## 5. Quick Docker Command Reference
+
+| Command | One-line explanation |
+|---|---|
+| `docker --version` | Displays the Docker CLI version. |
+| `docker version` | Displays client and server version details. |
+| `docker info` | Shows Docker engine information. |
+| `docker run IMAGE` | Creates and starts a container from an image. |
+| `docker run -it IMAGE sh` | Starts a container with an interactive terminal and shell. |
+| `docker run -d IMAGE` | Starts a container in the background. |
+| `docker run --name NAME IMAGE` | Creates a container with a custom name. |
+| `docker run -p HOST:CONTAINER IMAGE` | Maps a host port to a container port. |
+| `docker ps` | Lists running containers. |
+| `docker ps -a` | Lists all containers, including stopped containers. |
+| `docker image ls` | Lists local images. |
+| `docker pull IMAGE` | Downloads an image without starting a container. |
+| `docker logs CONTAINER` | Displays captured container output. |
+| `docker exec -it CONTAINER sh` | Opens an interactive shell in a running container. |
+| `docker stop CONTAINER` | Stops a running container. |
+| `docker start CONTAINER` | Starts an existing stopped container. |
+| `docker restart CONTAINER` | Restarts an existing container. |
+| `docker rm CONTAINER` | Removes a stopped container. |
+| `docker inspect CONTAINER` | Displays detailed configuration and state information. |
+| `docker port CONTAINER` | Displays published port mappings. |
+
+Replace placeholders such as `IMAGE`, `CONTAINER`, `NAME`, `HOST`, and `CONTAINER_PORT` with actual values. Do not type angle-bracket placeholders literally into PowerShell.
+
+## 6. Complete Practical Workflow
+
+Run these commands one at a time and verify each result.
+
+### Verify Docker and Run Hello World
+
+```powershell
+docker --version
+docker run hello-world
+```
+
+### Start Nginx
+
+```powershell
+docker run -d --name web-server -p 8080:80 nginx
+```
+
+Open `http://localhost:8080` in your browser.
+
+### Inspect Nginx
+
+```powershell
+docker ps
+docker logs web-server
+docker exec web-server nginx -v
+docker port web-server
+```
+
+### Explore Ubuntu
+
+```powershell
+docker run -it --name my-ubuntu ubuntu bash
+```
+
+Inside Ubuntu:
 
 ```bash
-docker --version
-docker info
-docker run hello-world
+cat /etc/os-release
+whoami
+pwd
+ls -la
+exit
+```
 
-docker run -d -p 80:80 --name nginx-server nginx
-docker run -it --name ubuntu-practice ubuntu /bin/bash
+### Inspect and Clean Up
 
+Back in PowerShell:
+
+```powershell
 docker ps
 docker ps -a
-
-docker stop nginx-server
-docker rm nginx-server
-
-docker run -d nginx
-docker run -d --name my-nginx nginx
-docker run -d -p 8080:80 --name my-nginx nginx
-
-docker logs my-nginx
-docker logs -f my-nginx
-
-docker exec -it my-nginx /bin/bash
+docker stop web-server
+docker rm web-server
+docker ps -a
 ```
 
-## Key Docker Concepts
-
-```text
-Docker Image
-     ↓
-docker run
-     ↓
-Docker Container
-     ↓
-Running Application
-```
-
-```text
-Docker Client
-      ↓
-Docker Daemon
-      ↓
-Images / Containers / Networks / Volumes
-```
-
-### Important Options
-
-| Option   | Meaning                  |
-| -------- | ------------------------ |
-| `-d`     | Detached/background mode |
-| `-it`    | Interactive terminal     |
-| `-p`     | Port mapping             |
-| `--name` | Custom container name    |
-| `-f`     | Follow logs              |
-| `-a`     | Show all containers      |
-| `-i`     | Interactive              |
-| `-t`     | Allocate terminal        |
+If a container with one of these names already exists, inspect it with `docker ps -a` before reusing the name.
 
 
-**In short:** Docker provides a way to package, deploy, and run applications consistently using lightweight containers.
+## 8. Why Docker Matters for DevOps
+
+Docker packages applications and their dependencies into portable images, helping teams run applications consistently across development, testing, and production.
+
+Containers are widely used in:
+
+- CI/CD pipelines
+- Microservices architectures
+- Cloud deployments
+- Application testing
+- Container orchestration platforms such as Kubernetes
+
+Learning Docker is an important step toward becoming a DevOps engineer because it builds the foundation for containerization, automated deployment, and orchestration.
+
+## 9. Interview Practice
+
+Try answering these questions without looking at the explanations.
+
+1. What is Docker, and why do we use containers?
+2. What is the difference between a Docker image and a container?
+3. How are containers different from virtual machines?
+4. What is the role of the Docker daemon?
+5. What happens when you execute `docker run hello-world`?
+6. What is the difference between `docker ps` and `docker ps -a`?
+7. What does the `-d` flag do?
+8. Explain `-p 8080:80`.
+9. What is the difference between `docker stop` and `docker rm`?
+10. What is the purpose of `docker logs`?
+11. What is the difference between `docker run` and `docker exec`?
+12. Why does an Nginx container continue running after you exit a shell opened with `docker exec`?
+
+
+
