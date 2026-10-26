@@ -1,14 +1,12 @@
-# 🚀 Day 30: Docker Images, Layers & Container Lifecycle
+# Day 30 – Docker Images & Container Lifecycle
 
-As part of the **#90DaysOfDevOps** challenge by **TrainWithShubham**, I practiced Docker images, image layers, container lifecycle management, running containers, and Docker cleanup.
+## Objective
 
----
+Today's goal is to understand how Docker images and containers work, how image layers and caching improve efficiency, and how to manage the complete container lifecycle.
 
-## 📌 Task 1: Docker Images
+## Task 1: Docker Images
 
 ### 1. Pull Docker Images
-
-Pull the `nginx`, `ubuntu`, and `alpine` images from Docker Hub.
 
 ```bash
 docker pull nginx
@@ -16,635 +14,485 @@ docker pull ubuntu
 docker pull alpine
 ```
 
-### 2. List Docker Images
+- `docker pull nginx` – Downloads the NGINX web server image from Docker Hub.
+- `docker pull ubuntu` – Downloads the Ubuntu Linux image from Docker Hub.
+- `docker pull alpine` – Downloads the lightweight Alpine Linux image from Docker Hub.
 
-To list all images available on the local machine:
+### 2. List All Images
 
 ```bash
 docker images
-```
-
-Or:
-
-```bash
 docker image ls
 ```
 
-Example:
+- `docker images` – Lists all Docker images available on the local machine, including their tags, IDs, and sizes.
+- `docker image ls` – Displays the same image listing using the newer Docker command syntax.
 
-```text
-REPOSITORY   TAG       IMAGE ID       CREATED        SIZE
-nginx        latest    xxxxxxxx       ...            ...
-ubuntu       latest    xxxxxxxx       ...            ...
-alpine       latest    xxxxxxxx       ...            ...
-```
+**Observation:** Record the actual image sizes displayed by your system.
 
-### 3. Ubuntu vs Alpine
+| Image | Purpose |
+|---|---|
+| NGINX | Web server and reverse proxy |
+| Ubuntu | General-purpose Linux environment |
+| Alpine | Lightweight Linux environment |
 
-Compare the sizes of the `ubuntu` and `alpine` images:
+### 3. Compare Ubuntu and Alpine
 
 ```bash
-docker images ubuntu alpine
+docker image inspect ubuntu
+docker image inspect alpine
 ```
 
-#### Why is Alpine much smaller?
-
-**Alpine Linux** is designed to be extremely lightweight. It contains only the essential components required to run applications.
-
-Ubuntu is a more complete general-purpose Linux distribution and includes many additional packages and utilities.
-
-| Image  | General Characteristics                    |
-| ------ | ------------------------------------------ |
-| Ubuntu | Full-featured Linux distribution           |
+| Image  | General Characteristics| 
+| ------ | ------------------------------------------ | 
+| Ubuntu | Full-featured Linux distribution           | 
 | Alpine | Minimal and lightweight Linux distribution |
 
-The smaller Alpine image can help reduce:
+- `docker image inspect ubuntu` – Displays metadata and configuration details of the Ubuntu image.
+- `docker image inspect alpine` – Displays metadata and configuration details of the Alpine image.
 
-* Image download time
-* Storage usage
-* Container startup overhead
-* Network transfer
-* Container attack surface
+**Why is Alpine smaller than Ubuntu?**
 
-> **Note:** Smaller does not automatically mean better. The right base image depends on the application's requirements and compatibility.
+- Alpine includes fewer preinstalled packages and utilities.
+- Alpine uses BusyBox for many common system utilities.
+- Alpine uses musl libc, while Ubuntu commonly uses glibc.
+- Alpine is designed to provide a minimal operating system footprint.
+
+**Real-world application:** Smaller images can reduce download time, storage requirements, and deployment overhead. However, application compatibility must be tested before choosing Alpine.
 
 ### 4. Inspect an Image
 
-Use `docker image inspect` to view detailed information about an image:
-
 ```bash
 docker image inspect nginx
+docker image inspect nginx --format '{{.Id}}'
+docker image inspect nginx --format '{{.Os}}'
+docker image inspect nginx --format '{{.Architecture}}'
+docker image inspect nginx --format '{{json .Config.Cmd}}'
 ```
 
-You can find information such as:
-
-* Image ID
-* Created date
-* Architecture
-* Operating system
-* Environment variables
-* Entrypoint
-* Default command
-* Exposed ports
-* Root filesystem
-* Image layers
-* Metadata
+- `docker image inspect nginx` – Displays detailed metadata, configuration, tags, and layer-related information for the NGINX image.
+- `docker image inspect nginx --format '{{.Id}}'` – Displays the full image ID.
+- `docker image inspect nginx --format '{{.Os}}'` – Displays the operating system associated with the image.
+- `docker image inspect nginx --format '{{.Architecture}}'` – Displays the CPU architecture of the image.
+- `docker image inspect nginx --format '{{json .Config.Cmd}}'` – Displays the default command configured for the image.
 
 ### 5. Remove an Image
 
-To remove an image that is no longer required:
-
 ```bash
-docker rmi alpine
+docker images
+docker rmi ubuntu
+docker images
 ```
 
-Alternative:
+- `docker images` – Lists images before removal.
+- `docker rmi ubuntu` – Removes the Ubuntu image if it is not blocked by existing container references.
+- `docker images` – Verifies whether the image was removed successfully.
 
-```bash
-docker image rm alpine
-```
-
-If the image is being used by a container, remove the container first or use the appropriate cleanup command.
+**Note:** Docker may prevent removal if a container still references the image. Remove only resources you no longer need.
 
 ---
 
-# 📦 Task 2: Image Layers
+## Task 2: Image Layers
 
-## 1. View Image History
-
-Run:
+### 1. View Image History
 
 ```bash
 docker image history nginx
+docker image history --no-trunc nginx
 ```
 
-This shows the history of how the Docker image was built.
+- `docker image history nginx` – Displays the image history, including build instructions and the sizes associated with image changes.
+- `docker image history --no-trunc nginx` – Displays the full history without truncating long commands.
 
-Example:
+### 2. Understand Layer Sizes
 
-```text
-IMAGE        CREATED       CREATED BY                         SIZE
-xxxxxxxx     ...           /bin/sh -c ...                     ...
-xxxxxxxx     ...           /bin/sh -c ...                     ...
-xxxxxxxx     ...           ENTRYPOINT ["..."]                  0B
-```
+Some history entries show sizes, while others show `0B`.
 
-## 2. Understanding Layers
+- Layers with non-zero sizes commonly contain filesystem changes, such as installed packages or copied files.
+- Entries showing `0B` often represent configuration instructions that do not add filesystem data.
+- The displayed history is not necessarily a one-to-one list of all unique physical storage layers.
 
-Each filesystem-changing instruction in a Docker image can contribute a **layer**.
+### 3. What Are Docker Image Layers?
 
-Some entries may show a size such as:
+Docker image layers are filesystem changes stacked together to form a complete image. Docker uses them to improve storage efficiency, image distribution, and build performance.
 
-```text
-25MB
-10MB
-5MB
-```
+**Benefits of image layers:**
 
-Others may show:
+1. **Reusability:** Multiple images can share common layers.
+2. **Storage efficiency:** Shared layers do not need to be stored repeatedly on the same Docker host.
+3. **Build caching:** Docker can reuse unchanged build steps when their inputs remain valid.
+4. **Faster downloads:** Docker generally downloads only the layers that are missing locally.
+5. **Separation:** Filesystem changes from different image-building steps can be represented independently.
 
-```text
-0B
-```
-
-A `0B` entry often represents metadata or configuration changes that do not add filesystem content.
-
-## 3. What Are Docker Image Layers?
-
-Docker images are built using multiple layers.
-
-For example, a Dockerfile might contain:
-
-```dockerfile
-FROM ubuntu
-
-RUN apt-get update
-
-RUN apt-get install -y nginx
-
-COPY index.html /var/www/html/
-```
-
-Each filesystem-changing instruction can create another layer.
-
-### Why does Docker use layers?
-
-Docker uses layers because they provide:
-
-* **Reusability**: Multiple images can share the same layers.
-* **Caching**: Docker can reuse unchanged layers during builds.
-* **Efficiency**: Only changed layers need to be rebuilt or transferred.
-* **Storage optimization**: Shared layers do not need to be stored multiple times.
-
-### Important Concept
-
-Docker images are generally **read-only**, while containers add a writable layer on top of the image.
-
-```text
-Container Writable Layer
-          ↓
-Image Layer
-Image Layer
-Image Layer
-Base Layer
-```
+**Real-world example:** Multiple application images can reuse the same base image layers, reducing duplicate storage and download requirements.
 
 ---
 
-# 🔄 Task 3: Container Lifecycle
+## Task 3: Container Lifecycle
 
-For this task, use an Nginx container.
-
-## 1. Create a Container Without Starting It
+### 1. Create a Container Without Starting It
 
 ```bash
 docker create --name lifecycle-demo nginx
-```
-
-Check the container:
-
-```bash
 docker ps -a
 ```
 
-The container should have a `Created` status.
+- `docker create --name lifecycle-demo nginx` – Creates a container named `lifecycle-demo` without starting its process.
+- `docker ps -a` – Lists all containers, including created, running, and stopped containers.
 
----
+**Expected state:** Created.
 
-## 2. Start the Container
+### 2. Start the Container
 
 ```bash
 docker start lifecycle-demo
-```
-
-Check:
-
-```bash
 docker ps -a
 ```
 
-The container should now be running.
+- `docker start lifecycle-demo` – Starts the previously created container.
+- `docker ps -a` – Displays the container's current state.
 
----
+**Expected state:** Up.
 
-## 3. Pause the Container
+### 3. Pause the Container
 
 ```bash
 docker pause lifecycle-demo
-```
-
-Check status:
-
-```bash
 docker ps -a
 ```
 
-You can also check:
+- `docker pause lifecycle-demo` – Suspends the container's running processes.
+- `docker ps -a` – Shows the paused container status.
 
-```bash
-docker inspect -f '{{.State.Status}}' lifecycle-demo
-```
+**Expected state:** Up (Paused).
 
----
-
-## 4. Unpause the Container
+### 4. Unpause the Container
 
 ```bash
 docker unpause lifecycle-demo
-```
-
-Check:
-
-```bash
-docker ps
-```
-
----
-
-## 5. Stop the Container
-
-```bash
-docker stop lifecycle-demo
-```
-
-Check:
-
-```bash
 docker ps -a
 ```
 
-The container should show an exited/stopped state.
+- `docker unpause lifecycle-demo` – Resumes the suspended processes.
+- `docker ps -a` – Confirms that the container is running again.
 
----
+**Expected state:** Up.
 
-## 6. Restart the Container
+### 5. Stop the Container
+
+```bash
+docker stop lifecycle-demo
+docker ps -a
+```
+
+- `docker stop lifecycle-demo` – Gracefully requests container termination before forcefully terminating it if necessary.
+- `docker ps -a` – Shows the container in an exited state.
+
+**Expected state:** Exited.
+
+### 6. Restart the Container
 
 ```bash
 docker restart lifecycle-demo
+docker ps -a
 ```
 
-Check:
+- `docker restart lifecycle-demo` – Restarts the container by stopping and starting it.
+- `docker ps -a` – Verifies the current container state.
 
-```bash
-docker ps
-```
+**Expected state:** Up.
 
----
-
-## 7. Kill the Container
+### 7. Kill the Container
 
 ```bash
 docker kill lifecycle-demo
-```
-
-Check:
-
-```bash
 docker ps -a
 ```
 
-### `stop` vs `kill`
+- `docker kill lifecycle-demo` – Immediately sends `SIGKILL` by default to terminate the container's main process.
+- `docker ps -a` – Shows the terminated container as exited.
 
-| Command       | Purpose                              |
-| ------------- | ------------------------------------ |
-| `docker stop` | Gracefully stops the container       |
-| `docker kill` | Immediately terminates the container |
+**Expected state:** Exited, commonly with exit code 137.
 
----
-
-## 8. Remove the Container
-
-If the container is still running, stop it first:
-
-```bash
-docker stop lifecycle-demo
-```
-
-Then remove it:
+### 8. Remove the Container
 
 ```bash
 docker rm lifecycle-demo
-```
-
-Verify:
-
-```bash
 docker ps -a
 ```
 
+- `docker rm lifecycle-demo` – Removes the stopped container.
+- `docker ps -a` – Confirms that the container no longer appears in the list.
+
+**Expected state:** Removed.
+
+### Container Lifecycle Summary
+
+| Command | Purpose |
+|---|---|
+| `docker create` | Creates a container without starting it |
+| `docker start` | Starts a stopped container |
+| `docker pause` | Suspends container processes |
+| `docker unpause` | Resumes suspended processes |
+| `docker stop` | Gracefully stops a container |
+| `docker restart` | Stops and starts a container |
+| `docker kill` | Immediately terminates the main process by default |
+| `docker rm` | Removes a stopped container |
+| `docker ps` | Lists running containers |
+| `docker ps -a` | Lists all containers |
+
 ---
 
-# 🐳 Task 4: Working with Running Containers
+## Task 4: Working with Running Containers
 
-## 1. Run an Nginx Container in Detached Mode
-
-```bash
-docker run -d --name nginx-demo -p 8080:80 nginx
-```
-
-Check the running container:
+### 1. Run NGINX in Detached Mode
 
 ```bash
+docker run -d --name nginx-lab -p 8080:80 nginx
 docker ps
 ```
 
-Open in your browser:
+- `docker run -d --name nginx-lab -p 8080:80 nginx` – Creates and starts an NGINX container in the background, mapping host port 8080 to container port 80.
+- `docker ps` – Lists currently running containers.
 
-```text
-http://localhost:8080
-```
-
-You should see the Nginx welcome page.
-
----
-
-## 2. View Container Logs
+Test the web server:
 
 ```bash
-docker logs nginx-demo
+curl http://localhost:8080
 ```
 
----
+- `curl http://localhost:8080` – Sends an HTTP request to the NGINX service through the host's port mapping.
 
-## 3. View Real-Time Logs
-
-Use the `-f` option to follow the logs:
+### 2. View Container Logs
 
 ```bash
-docker logs -f nginx-demo
+docker logs nginx-lab
 ```
 
-Press:
+- `docker logs nginx-lab` – Displays the logs collected from the NGINX container.
 
-```text
-Ctrl + C
-```
-
-to stop following the logs.
-
----
-
-## 4. Exec Into the Container
-
-Open a shell inside the running Nginx container:
+Generate a request first if the access log is empty:
 
 ```bash
-docker exec -it nginx-demo /bin/bash
+curl http://localhost:8080
+docker logs nginx-lab
 ```
 
-If Bash is not available:
+### 3. View Real-Time Logs
 
 ```bash
-docker exec -it nginx-demo /bin/sh
+docker logs -f nginx-lab
 ```
 
-Explore the filesystem:
+- `docker logs -f nginx-lab` – Continuously follows new log entries generated by the container.
+
+To display the latest 20 lines and continue following:
+
+```bash
+docker logs --tail 20 -f nginx-lab
+```
+
+- `docker logs --tail 20 -f nginx-lab` – Displays the last 20 log lines and follows new entries.
+
+Press `Ctrl+C` to stop following logs without stopping the container.
+
+### 4. Enter the Container
+
+```bash
+docker exec -it nginx-lab /bin/bash
+```
+
+- `docker exec -it nginx-lab /bin/bash` – Opens an interactive Bash shell inside the running container.
+
+If Bash is unavailable, use:
+
+```bash
+docker exec -it nginx-lab /bin/sh
+```
+
+- `docker exec -it nginx-lab /bin/sh` – Opens an interactive shell using `/bin/sh`.
+
+Explore the filesystem from inside the container:
 
 ```bash
 pwd
-ls
-ls -la
-cd /etc
-ls
-cd /usr/share/nginx/html
-ls
-```
-
-Exit the container:
-
-```bash
+ls -la /
+ls -la /etc/nginx
+ls -la /usr/share/nginx/html
+cat /etc/os-release
 exit
 ```
 
----
+- `pwd` – Displays the current working directory.
+- `ls -la /` – Lists files and directories in the root filesystem.
+- `ls -la /etc/nginx` – Lists NGINX configuration files.
+- `ls -la /usr/share/nginx/html` – Lists the default website files.
+- `cat /etc/os-release` – Displays operating system identification information.
+- `exit` – Leaves the interactive container shell.
 
-## 5. Run a Single Command Inside the Container
-
-You don't always need to enter the container.
-
-For example:
-
-```bash
-docker exec nginx-demo ls /usr/share/nginx/html
-```
-
-Check the Nginx version:
+### 5. Execute a Single Command Inside the Container
 
 ```bash
-docker exec nginx-demo nginx -v
+docker exec nginx-lab nginx -v
+docker exec nginx-lab ls -la /usr/share/nginx/html
+docker exec nginx-lab cat /etc/nginx/nginx.conf
 ```
 
----
+- `docker exec nginx-lab nginx -v` – Displays the installed NGINX version.
+- `docker exec nginx-lab ls -la /usr/share/nginx/html` – Lists the website files without opening an interactive shell.
+- `docker exec nginx-lab cat /etc/nginx/nginx.conf` – Displays the main NGINX configuration file.
 
-## 6. Inspect the Container
-
-Run:
+### 6. Inspect the Container
 
 ```bash
-docker inspect nginx-demo
+docker inspect nginx-lab
 ```
 
-This provides detailed information about the container.
+- `docker inspect nginx-lab` – Displays detailed container metadata, networking information, configuration, and mount details.
 
-### Find the IP Address
+**Find the container IP address:**
 
 ```bash
-docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' nginx-demo
+docker inspect nginx-lab --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}'
 ```
 
-### Find Port Mappings
+- This command displays the container's IP address on its configured Docker network.
+
+**Find port mappings:**
 
 ```bash
-docker port nginx-demo
+docker port nginx-lab
 ```
 
-Example:
+- `docker port nginx-lab` – Displays the published host ports mapped to container ports.
+
+Expected mapping example:
 
 ```text
 80/tcp -> 0.0.0.0:8080
 ```
 
-### Find Mounts
+**Find mounts:**
 
 ```bash
-docker inspect -f '{{json .Mounts}}' nginx-demo
+docker inspect nginx-lab --format '{{json .Mounts}}'
 ```
 
-The complete `docker inspect` output can also be searched for:
+- This command displays the container's configured mounts, including source paths, destinations, and mount types.
 
-* IP address
-* Port mappings
-* Mounts
-* Network configuration
-* Environment variables
-* Container state
-* Restart policy
-* Image information
+For a readable mount listing:
+
+```bash
+docker inspect nginx-lab --format '{{range .Mounts}}{{println .Type .Source "->" .Destination}}{{end}}'
+```
+
+- This command prints each mount type, source, and destination in a readable format.
 
 ---
 
-# 🧹 Task 5: Cleanup
+## Task 5: Docker Cleanup
 
-## 1. Stop All Running Containers
+**Warning:** These commands can stop applications and remove containers or images. Check what is running before using them, especially on shared or production machines.
 
-List running containers:
-
-```bash
-docker ps
-```
-
-Stop all running containers:
+### 1. Stop All Running Containers
 
 ```bash
 docker stop $(docker ps -q)
 ```
 
-### Explanation
+- `docker stop $(docker ps -q)` – Stops all currently running containers.
 
-```text
-docker ps -q
-```
-
-returns only the IDs of running containers.
-
-Those IDs are then passed to:
-
-```text
-docker stop
-```
-
----
-
-## 2. Remove All Stopped Containers
+Safer version when no containers are running:
 
 ```bash
-docker container prune
+docker ps -q | xargs -r docker stop
 ```
 
-Docker will ask for confirmation.
+- This command stops running containers and handles an empty container list without passing an empty argument to `docker stop`.
 
-To skip the confirmation:
+Verify:
 
 ```bash
-docker container prune -f
+docker ps
 ```
 
----
+- `docker ps` – Confirms which containers remain running.
 
-## 3. Remove Unused Images
+### 2. Remove All Containers
 
-To remove dangling images:
+```bash
+docker rm $(docker ps -aq)
+```
+
+- `docker rm $(docker ps -aq)` – Removes all stopped containers after they have been stopped.
+
+Safer version:
+
+```bash
+docker ps -aq | xargs -r docker rm
+```
+
+- This removes all containers returned by `docker ps -aq` and safely handles an empty list.
+
+**Important:** This removes every container on the Docker host, not just containers created during today's practice.
+
+### 3. Remove Unused Images
 
 ```bash
 docker image prune
 ```
 
-To remove all unused images:
+- `docker image prune` – Removes dangling images that are not referenced by containers.
+
+To remove all images not referenced by any existing container:
 
 ```bash
 docker image prune -a
 ```
 
-Without confirmation:
+- `docker image prune -a` – Removes all unused images, including tagged images that are not referenced by containers.
 
-```bash
-docker image prune -a -f
-```
+**Note:** Run the more aggressive cleanup only when you are certain you no longer need those images.
 
-> ⚠️ Be careful with `-a`. It can remove images that are not currently associated with containers but may still be useful later.
-
----
-
-## 4. Check Docker Disk Usage
-
-Run:
+### 4. Check Docker Disk Usage
 
 ```bash
 docker system df
-```
-
-This shows Docker's disk usage for:
-
-* Images
-* Containers
-* Local volumes
-* Build cache
-
-For detailed information:
-
-```bash
 docker system df -v
 ```
 
----
+- `docker system df` – Displays disk usage for Docker images, containers, local volumes, and build cache.
+- `docker system df -v` – Displays detailed Docker disk usage information.
 
-# 🧠 Key Learnings
+Example output:
 
-After completing these tasks, I practiced:
+```text
+TYPE            TOTAL     ACTIVE    SIZE      RECLAIMABLE
+Images          3         0         250MB     250MB
+Containers      0         0         0B        0B
+Local Volumes   1         0         20MB      20MB
+Build Cache     2         0         50MB      50MB
+```
 
-* Docker image management
-* Pulling images from Docker Hub
-* Listing and inspecting images
-* Understanding Ubuntu vs Alpine
-* Docker image layers
-* Image caching and reuse
-* Complete container lifecycle
-* Creating containers
-* Starting and stopping containers
-* Pausing and unpausing containers
-* Restarting and killing containers
-* Removing containers
-* Running containers in detached mode
-* Container logs
-* Real-time log monitoring
-* `docker exec`
-* Container filesystem exploration
-* Container inspection
-* IP address and port mapping
-* Docker cleanup
-* Docker disk usage management
+The figures above are illustrative. Record the actual output from your machine.
 
 ---
 
-# 📋 Important Docker Commands
+## Key Learnings
 
-| Command                      | Purpose                              |
-| ---------------------------- | ------------------------------------ |
-| `docker pull IMAGE`          | Download an image                    |
-| `docker images`              | List images                          |
-| `docker image ls`            | List images                          |
-| `docker image inspect IMAGE` | Inspect an image                     |
-| `docker image history IMAGE` | View image layers/history            |
-| `docker rmi IMAGE`           | Remove an image                      |
-| `docker create`              | Create a container                   |
-| `docker run`                 | Create and start a container         |
-| `docker start`               | Start a container                    |
-| `docker pause`               | Pause a container                    |
-| `docker unpause`             | Resume a paused container            |
-| `docker stop`                | Gracefully stop a container          |
-| `docker restart`             | Restart a container                  |
-| `docker kill`                | Forcefully stop a container          |
-| `docker rm`                  | Remove a container                   |
-| `docker ps`                  | List running containers              |
-| `docker ps -a`               | List all containers                  |
-| `docker logs`                | View container logs                  |
-| `docker exec`                | Execute a command inside a container |
-| `docker inspect`             | View detailed information            |
-| `docker port`                | View port mappings                   |
-| `docker container prune`     | Remove stopped containers            |
-| `docker image prune`         | Remove unused images                 |
-| `docker system df`           | Check Docker disk usage              |
+1. Docker images are templates used to create containers.
+2. Docker image layers improve reuse, storage efficiency, and build caching.
+3. Containers can be created, started, paused, resumed, stopped, restarted, killed, and removed.
+4. `docker logs` helps troubleshoot application behavior.
+5. `docker exec` allows commands to run inside a running container.
+6. `docker inspect` provides detailed information about container configuration, networking, and mounts.
+7. Docker cleanup commands help manage unused resources and disk space.
 
----
+## Real-World DevOps Applications
 
-# 🎯 Final Takeaway
+- **Image management:** Pull and inspect images before deploying applications.
+- **Container troubleshooting:** Check logs, execute diagnostic commands, and inspect network settings.
+- **Lifecycle management:** Restart failed services and stop containers safely during maintenance.
+- **Storage optimization:** Remove unused images and monitor Docker disk consumption.
+- **Production readiness:** Use health checks, persistent volumes, proper logging, and resource limits when deploying applications.
 
-Docker is not just about running containers. Understanding **images, layers, container states, networking information, logs, inspection, and cleanup** is essential for working effectively with Docker in a DevOps environment.
-
-> **Practice → Understand → Automate → Deploy**
-
-## #90DaysOfDevOps
-
-**Day 30 completed ✅**
-
-Learning Docker one concept at a time and building stronger DevOps fundamentals.
